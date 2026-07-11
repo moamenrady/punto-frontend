@@ -1,0 +1,11 @@
+/* reports.css — minimal global resets for the Reports page */
+
+/* Hide recharts default tooltip wrapper overflow */
+.recharts-wrapper {
+  overflow: visible !important;
+}
+
+/* Smooth scrollbar hide on tab strip */
+.rpt-tabs-strip::-webkit-scrollbar {
+  display: none;
+}

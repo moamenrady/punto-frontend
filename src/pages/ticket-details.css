@@ -1,0 +1,290 @@
+/* =============================================
+   TICKET DETAILS PAGE — Dedicated Styles
+   ============================================= */
+
+.td-bg {
+  background: #F3F4F6;
+  min-height: 100%;
+  padding: 32px 40px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* ── Page header ───────────────────────────── */
+.td-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.td-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.td-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #E5E7EB;
+  background: #fff;
+  color: #6B7280;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  margin-top: 2px;
+  text-decoration: none;
+}
+
+.td-back-btn:hover {
+  background: #F9FAFB;
+  color: #111827;
+}
+
+.td-header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.td-header-sub {
+  font-size: 0.8rem;
+  color: #9CA3AF;
+  margin-top: 3px;
+}
+
+.td-assign-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #8A9FE8;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 4px 14px rgba(138, 159, 232, 0.35);
+}
+
+.td-assign-btn:hover {
+  background: #7A8FD8;
+  transform: translateY(-1px);
+}
+
+/* ── Main grid ─────────────────────────────── */
+.td-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .td-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Card base ─────────────────────────────── */
+.td-card {
+  background: #fff;
+  border: 1px solid #E9EBF0;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.td-card:last-child {
+  margin-bottom: 0;
+}
+
+.td-card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 20px 0;
+}
+
+/* ── Ticket title card ─────────────────────── */
+.td-ticket-headline {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.td-ticket-headline .accent {
+  color: #8A9FE8;
+}
+
+/* ── Creator card ──────────────────────────── */
+.td-creator-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.td-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #E5E7EB;
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.td-creator-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 32px;
+  flex: 1;
+}
+
+.td-field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.td-field-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ── Description card ──────────────────────── */
+.td-description-text {
+  font-size: 0.875rem;
+  color: #6B7280;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── Attachments card ──────────────────────── */
+.td-upload-zone {
+  border: 1.5px dashed #D1D5DB;
+  border-radius: 10px;
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #9CA3AF;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: #FAFAFA;
+}
+
+.td-upload-zone:hover {
+  border-color: #8A9FE8;
+  background: #F5F7FF;
+  color: #8A9FE8;
+}
+
+/* ── Right sidebar — Ticket Details card ───── */
+.td-details-card {
+  background: #fff;
+  border: 1px solid #E9EBF0;
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.td-details-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 20px 0;
+}
+
+.td-detail-row {
+  margin-bottom: 18px;
+}
+
+.td-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.td-detail-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.td-detail-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ── Status & Priority badges ──────────────── */
+.td-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.td-badge-inprogress {
+  background: #FEF9C3;
+  color: #92400E;
+}
+
+.td-badge-open {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.td-badge-assigned {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.td-badge-closed {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.td-badge-high {
+  background: #FCE7F3;
+  color: #9D174D;
+}
+
+.td-badge-medium {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.td-badge-low {
+  background: #D1FAE5;
+  color: #065F46;
+}

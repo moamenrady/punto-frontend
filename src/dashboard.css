@@ -1,0 +1,1157 @@
+/* ============================================
+   PROJECT MANAGEMENT DASHBOARD STYLES
+   ============================================ */
+
+/* Dashboard Welcome */
+.dashboard-welcome {
+    margin-bottom: 32px;
+}
+
+.dashboard-welcome h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.dashboard-welcome p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* View Tabs */
+.dashboard-view-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.view-tab {
+    padding: 10px 24px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+    font-family: inherit;
+}
+
+.view-tab:hover {
+    color: var(--text-dark);
+}
+
+.view-tab.active {
+    color: var(--primary);
+}
+
+.view-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--primary);
+    border-radius: 2px 2px 0 0;
+}
+
+/* Projects Overview */
+.projects-overview {
+    margin-bottom: 36px;
+}
+
+.projects-overview h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-dark);
+}
+
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.overview-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.overview-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.overview-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.overview-card-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.overview-card-icon.blue {
+    background: #e6f0ff;
+    color: #508cff;
+}
+
+.overview-card-icon.yellow {
+    background: #fff8e6;
+    color: #f7a925;
+}
+
+.overview-card-icon.green {
+    background: #e8f9ed;
+    color: #41c875;
+}
+
+.overview-card-icon.purple {
+    background: #f4ecff;
+    color: #b675ff;
+}
+
+.overview-card-info h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.overview-card-info p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Team Charts Section */
+.team-charts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 36px;
+}
+
+.team-chart-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+}
+
+.team-chart-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+}
+
+.chart-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-circle-inner {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.chart-circle.blue {
+    background: conic-gradient(#508cff 0% 75%, #e6f0ff 75% 100%);
+}
+
+.chart-circle.yellow {
+    background: conic-gradient(#f7a925 0% 60%, #fff8e6 60% 100%);
+}
+
+.chart-circle.green {
+    background: conic-gradient(#41c875 0% 85%, #e8f9ed 85% 100%);
+}
+
+.chart-circle::before {
+    content: '';
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    background: var(--bg-sidebar);
+    border-radius: 50%;
+}
+
+.chart-circle-inner {
+    position: relative;
+    z-index: 1;
+}
+
+/* Dashboard Actions Row */
+.dashboard-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+/* All Tasks Table */
+.tasks-section {
+    margin-bottom: 36px;
+}
+
+.tasks-section h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-dark);
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.tasks-table thead {
+    background: #f8f9fc;
+}
+
+.tasks-table th {
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tasks-table td {
+    padding: 16px 20px;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tasks-table tr:last-child td {
+    border-bottom: none;
+}
+
+.tasks-table tr:hover td {
+    background: #f8f9fc;
+}
+
+.task-assignee {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.task-assignee-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
+.priority-badge {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.priority-high {
+    background: #ffe6e6;
+    color: #f15858;
+}
+
+.priority-medium {
+    background: #fff8e6;
+    color: #f7a925;
+}
+
+.priority-low {
+    background: #e8f9ed;
+    color: #41c875;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-todo {
+    background: #e6f0ff;
+    color: #508cff;
+}
+
+.status-inprogress {
+    background: #fff8e6;
+    color: #f7a925;
+}
+
+.status-completed {
+    background: #e8f9ed;
+    color: #41c875;
+}
+
+/* Reports Section */
+.reports-section {
+    margin-bottom: 36px;
+}
+
+.reports-section h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-dark);
+}
+
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.report-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.report-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.report-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4ecff;
+    color: #b675ff;
+}
+
+.report-card-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.report-card span {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+/* ============================================
+   BOARD / SPRINT VIEW
+   ============================================ */
+
+.board-header {
+    margin-bottom: 28px;
+}
+
+.board-header h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.board-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.board-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.board-toolbar .search-input {
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    width: 240px;
+    background: var(--bg-sidebar);
+    transition: border-color 0.2s;
+}
+
+.board-toolbar .search-input:focus {
+    border-color: var(--primary);
+}
+
+.board-toolbar .toolbar-btn {
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-sidebar);
+    color: var(--text-dark);
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.board-toolbar .toolbar-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.board-toolbar .toolbar-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Sprint List */
+.sprints-section {
+    margin-bottom: 36px;
+}
+
+.sprint-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.sprint-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #f8f9fc;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sprint-header:hover {
+    background: #f0f2f8;
+}
+
+.sprint-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sprint-header-left h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.sprint-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.sprint-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sprint-action-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.sprint-action-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.sprint-action-btn.edit {
+    color: var(--primary);
+}
+
+.sprint-action-btn.delete {
+    color: #f15858;
+}
+
+.sprint-action-btn.delete:hover {
+    border-color: #f15858;
+}
+
+.sprint-tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sprint-tasks-table th {
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sprint-tasks-table td {
+    padding: 12px 20px;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sprint-tasks-table tr:last-child td {
+    border-bottom: none;
+}
+
+.sprint-tasks-table tr:hover td {
+    background: #fafaff;
+}
+
+.sprint-status-cell {
+    display: flex;
+    gap: 4px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.green {
+    background: #41c875;
+}
+
+.status-dot.yellow {
+    background: #f7a925;
+}
+
+.status-dot.red {
+    background: #f15858;
+}
+
+.status-dot.blue {
+    background: #508cff;
+}
+
+.status-dot.gray {
+    background: #d1d5db;
+}
+
+/* Kanboard */
+.kanboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 36px;
+}
+
+.kanboard-column {
+    background: #f8f9fc;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 300px;
+}
+
+.kanboard-column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.kanboard-column-header h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kanboard-count {
+    background: var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.kanboard-column-header.todo {
+    border-bottom-color: #508cff;
+}
+
+.kanboard-column-header.inprogress {
+    border-bottom-color: #f7a925;
+}
+
+.kanboard-column-header.completed {
+    border-bottom-color: #41c875;
+}
+
+.kanboard-card {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.kanboard-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+.kanboard-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.kanboard-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.kanboard-card-assignee {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.kanboard-card-assignee img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+}
+
+.kanboard-card-date {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+/* Add Sprint Button */
+.add-sprint-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    width: 100%;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-bottom: 24px;
+}
+
+.add-sprint-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #f8f9ff;
+}
+
+.add-sprint-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Delete Modal */
+.delete-modal-content {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.delete-modal-content h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.delete-modal-content .sprint-name-highlight {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.delete-modal-content p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-cancel {
+    padding: 10px 28px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-sidebar);
+    color: var(--text-dark);
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    border-color: var(--text-muted);
+}
+
+.btn-danger {
+    padding: 10px 28px;
+    border: 1px solid #f15858;
+    border-radius: 8px;
+    background: #f15858;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: #e04444;
+}
+
+/* View Task Modal */
+.view-task-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.view-task-row {
+    display: flex;
+    gap: 12px;
+}
+
+.view-task-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    min-width: 120px;
+}
+
+.view-task-value {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+/* Team modal members */
+.team-members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.team-member-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.team-member-row:hover {
+    background: #f8f9fc;
+}
+
+.team-member-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+}
+
+.team-member-info {
+    flex-grow: 1;
+}
+
+.team-member-info h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.team-member-info p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.team-member-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.member-action-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: transparent;
+    font-size: 0.78rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.member-action-btn.edit-member {
+    color: var(--primary);
+}
+
+.member-action-btn.edit-member:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.member-action-btn.remove-member {
+    color: #f15858;
+}
+
+.member-action-btn.remove-member:hover {
+    background: #f15858;
+    color: white;
+    border-color: #f15858;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .overview-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .kanboard {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .overview-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .team-charts {
+        grid-template-columns: 1fr;
+    }
+
+    .reports-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
+   RESPONSIVE — PROJECT MANAGEMENT DASHBOARD
+   ============================================ */
+
+/* ── Scrollable table wrappers ── */
+.table-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Page content wrapper ── */
+.page-content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Landing: stat cards ── */
+.landing-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+/* ── Landing: project cards list ── */
+.landing-project-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #E9EBF0;
+  flex-wrap: wrap;
+}
+
+.landing-project-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* ── Teams grid ── */
+.landing-teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* ── Kanban board ── */
+.kanban-board-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Tabs row ── */
+.tabs-row {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tabs-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Weekly schedule table ── */
+.schedule-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─────────── Tablet (≤ 1100px) ─────────── */
+@media (max-width: 1100px) {
+  .landing-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kanban-board-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ─────────── Tablet (≤ 900px) ─────────── */
+@media (max-width: 900px) {
+  .landing-teams-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ─────────── Mobile (≤ 640px) ─────────── */
+@media (max-width: 640px) {
+  .landing-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .team-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kanban-board-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-teams-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-project-card {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .landing-project-actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+
+  .tasks-table th,
+  .tasks-table td {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+
+  .sprint-tasks-table th,
+  .sprint-tasks-table td {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+
+  .kanboard {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ============================================================
+   DARK MODE OVERRIDES — html.dark
+   ============================================================ */
+
+/* ── Typography contrast ──────────────────────────────────────── */
+/* CSS !important overrides React inline style color values */
+html.dark .page-content-wrapper h1,
+html.dark .page-content-wrapper h2,
+html.dark .page-content-wrapper h3,
+html.dark .page-content-wrapper h4 { color: #e2e8f0 !important; }
+
+html.dark .board-header p,
+html.dark .dashboard-welcome p { color: #94a3b8 !important; }
+
+html.dark .landing-project-card p { color: #e2e8f0 !important; }
+html.dark .landing-project-card span { color: #94a3b8; }
+
+html.dark .ds-card > p { color: #e2e8f0 !important; }
+
+html.dark .sprint-tasks-table td { color: #cbd5e1 !important; }
+html.dark .tasks-table td { color: #cbd5e1 !important; }
+
+html.dark select { background: #1a1f2e !important; color: #e2e8f0 !important; border-color: #1e2336 !important; }
+html.dark .tabs-row button { color: #94a3b8; }
+
+/* Sprint header */
+html.dark .sprint-header { background: #1a1f2e !important; }
+html.dark .sprint-header:hover { background: #252b3b !important; }
+
+/* Tasks table thead */
+html.dark .tasks-table thead { background: #1a1f2e !important; }
+html.dark .tasks-table tr:hover td { background: #1a1f2e !important; }
+
+/* Sprint tasks table hover */
+html.dark .sprint-tasks-table tr:hover td { background: #1a1f2e !important; }
+
+/* Kanban column background — translucent navy */
+html.dark .kanboard-column { background: rgba(26,30,46,0.7) !important; }
+html.dark .kanboard-card {
+  background: rgba(19,22,31,0.9) !important;
+  border-color: rgba(30,36,56,0.8) !important;
+  backdrop-filter: blur(6px);
+}
+html.dark .kanboard-card-title { color: #e8ecf4 !important; }
+
+/* Add sprint button hover */
+html.dark .add-sprint-btn:hover { background: rgba(138,159,232,0.08) !important; border-color: #8A9FE8 !important; }
+
+/* Landing project card divider */
+html.dark .landing-project-card { border-bottom-color: rgba(30,36,56,0.8) !important; }
+
+/* Overview card */
+html.dark .overview-card { background: rgba(19,22,31,0.9) !important; border-color: rgba(30,36,56,0.8) !important; }
+html.dark .overview-card-info h3 { color: #e8ecf4 !important; }
+
+/* Team chart card */
+html.dark .team-chart-card { background: rgba(19,22,31,0.9) !important; border-color: rgba(30,36,56,0.8) !important; }
+html.dark .team-chart-card h3 { color: #e8ecf4 !important; }
+
+/* Report card */
+html.dark .report-card { background: rgba(19,22,31,0.9) !important; border-color: rgba(30,36,56,0.8) !important; }
+html.dark .report-card span { color: #e8ecf4 !important; }
+
+/* Sprint card */
+html.dark .sprint-card { background: rgba(19,22,31,0.9) !important; border-color: rgba(30,36,56,0.8) !important; }
+
+/* View tab */
+html.dark .view-tab { color: #64748b; }
+html.dark .view-tab:hover { color: #94a3b8; }
+html.dark .view-tab.active { color: #8A9FE8; }
+html.dark .dashboard-view-tabs { border-bottom-color: #1e2336; }
+
+/* Team member row */
+html.dark .team-member-row { border-color: #1e2336 !important; }
+html.dark .team-member-row:hover { background: #1a1f2e !important; }
+
+/* Cancel button */
+html.dark .btn-cancel { background: #1a1f2e !important; border-color: #1e2336 !important; color: #94a3b8 !important; }
+
+/* ─────────── Small mobile (≤ 420px) ─────────── */
+@media (max-width: 420px) {
+  .landing-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-project-actions button {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+  }
+}
