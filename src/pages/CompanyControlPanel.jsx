@@ -198,11 +198,19 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
     setInviteSuccessMsg("");
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        `${BASE}/companies/my-company/departments/${inviteModalDept._id}/users`,
-        { email: inviteEmail.trim() },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      if (inviteModalDept._id && inviteModalDept._id !== "company") {
+        await axios.post(
+          `${BASE}/companies/my-company/departments/${inviteModalDept._id}/users`,
+          { email: inviteEmail.trim() },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        await axios.post(
+          `${BASE}/companies/add-user`,
+          { email: inviteEmail.trim() },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
       setInviteSuccessMsg("User added successfully!");
       fetchUsers();
       fetchCompany();
@@ -288,7 +296,7 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
             </div>
           </div>
           <button
-            onClick={() => openInviteModal(departments[0] || { _id: "unassigned", name: "Company" })}
+            onClick={() => openInviteModal({ _id: "company", name: "Company" })}
             className="mt-4 w-full py-2.5 rounded-xl text-white font-bold bg-purple-600 hover:bg-purple-700 text-xs transition-all flex items-center justify-center gap-1 shadow-md"
           >
             <Plus size={14} />
@@ -513,9 +521,9 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
             <div className="flex items-center justify-between">
               <div>
                 <h3 className={`text-xl font-bold ${theme.textP}`}>
-                  {inviteModalDept?.name
+                  {inviteModalDept && inviteModalDept._id !== "company"
                     ? `Add to "${inviteModalDept.name}"`
-                    : "Add to Company"}
+                    : "Add User to Company"}
                 </h3>
                 <p className={`text-xs ${theme.textM} mt-1 opacity-70`}>
                   Enter the email address of the user to add.
