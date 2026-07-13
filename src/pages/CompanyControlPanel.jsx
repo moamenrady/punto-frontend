@@ -13,6 +13,7 @@ import {
   ArrowRightLeft
 } from "lucide-react";
 import axios from "axios";
+import Avatar from "../components/Avatar";
 
 const BASE = "https://punto-production-21ed.up.railway.app/api/v1";
 
@@ -326,18 +327,12 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                                 className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0"
                               >
                                 <div className="flex items-center gap-3">
-                                  {u.photo ? (
-                                    <img
-                                      src={`https://punto-production-21ed.up.railway.app${u.photo}`}
-                                      alt={u.name}
-                                      className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 dark:border-purple-800"
-                                      onError={e => { e.target.style.display = 'none'; }}
-                                    />
-                                  ) : (
-                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-300 text-xs font-bold">
-                                      {u.name?.[0]?.toUpperCase() || "?"}
-                                    </div>
-                                  )}
+                                  <Avatar 
+                                    photo={u.photo} 
+                                    name={u.name} 
+                                    size={32} 
+                                    className="border-2 border-purple-200 dark:border-purple-800" 
+                                  />
                                   <div>
                                     <p className={`text-sm font-bold ${theme.textP}`}>{u.name}</p>
                                     <p className={`text-xs ${theme.textM} opacity-80 mt-0.5`}>{u.email}</p>

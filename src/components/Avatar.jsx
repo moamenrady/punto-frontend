@@ -1,22 +1,26 @@
 import React from 'react';
 
 const Avatar = ({ photo, name = '?', size = 26, className = '', style = {} }) => {
-    // Determine the actual image source
-    let src = '';
+    // Determine if the photo is a default/placeholder or invalid string
+    const isDefault = !photo || 
+                      photo === 'null' || 
+                      photo === 'undefined' || 
+                      photo.includes('default.png') || 
+                      photo.includes('default.jpg');
     
-    // Team check (teams often have an _id in name or we can just render the name)
-    const isTeam = name.startsWith('Team+');
-
-    if (photo) {
-        src = photo.startsWith('http') || photo.startsWith('data:') ? photo : `https://punto-production-21ed.up.railway.app${photo}`;
-    } else {
-        src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'U')}&background=random&size=${size * 2}`;
-    }
+    // Determine the actual image source
+    const src = isDefault
+        ? `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'U')}&background=7F6FF5&color=fff&size=${size * 2}`
+        : (photo.startsWith('http') || photo.startsWith('data:') ? photo : `https://punto-production-21ed.up.railway.app${photo}`);
 
     return (
         <img 
             src={src} 
             alt={name.replace('Team+', 'Team ')} 
+            onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'U')}&background=7F6FF5&color=fff&size=${size * 2}`;
+            }}
             style={{ 
                 width: size, 
                 height: size, 

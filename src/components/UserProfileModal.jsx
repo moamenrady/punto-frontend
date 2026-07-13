@@ -326,13 +326,21 @@ export default function UserProfileModal({
                               boxShadow: "0 8px 24px rgba(127,111,245,0.25)",
                             }}
                           >
-                            {formData.photo ? (
+                            {formData.photo &&
+                            formData.photo !== "null" &&
+                            formData.photo !== "undefined" &&
+                            !formData.photo.includes("default.png") &&
+                            !formData.photo.includes("default.jpg") ? (
                               <img
                                 src={`https://punto-production-21ed.up.railway.app${formData.photo}`}
                                 style={{
                                   width: "100%",
                                   height: "100%",
                                   objectFit: "cover",
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  e.target.parentNode.innerText = (formData.name?.charAt(0) ?? "U");
                                 }}
                                 alt=""
                               />
@@ -867,10 +875,18 @@ export default function UserProfileModal({
                 border: "2px solid white",
               }}
             >
-              {formData.photo ? (
+              {formData.photo &&
+              formData.photo !== "null" &&
+              formData.photo !== "undefined" &&
+              !formData.photo.includes("default.png") &&
+              !formData.photo.includes("default.jpg") ? (
                 <img
                   src={`https://punto-production-21ed.up.railway.app${formData.photo}`}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.parentNode.innerText = (formData.name?.charAt(0) ?? "U");
+                  }}
                   alt=""
                 />
               ) : (
