@@ -119,26 +119,27 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
 
   const API_BASE = "https://punto-production-21ed.up.railway.app/api/v1/tickets";
 
-  // 1. Initial Load: Find in props or fetch from API
+  // 1. Always fetch fresh ticket data from API so resolution/status are up to date
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    // Show stale prop data instantly while fresh data loads
     const found = tickets.find((t) => t._id === id || t.id === id);
-    if (found) {
-      setLocalTicket(found);
-      setLoading(false);
-    } else {
-      // If not in props (happens after resolve/refresh), fetch directly
-      const token = localStorage.getItem("token");
-      fetch(`${API_BASE}/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+    if (found) setLocalTicket(found);
+
+    // Always fetch latest from server
+    fetch(`${API_BASE}/${id}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+      .then(res => res.json())
+      .then(data => {
+        // getOne factory returns { status, data: { doc } }
+        const ticket = data?.data?.doc || data?.data?.data || data?.data;
+        if (ticket && ticket._id) setLocalTicket(ticket);
+        setLoading(false);
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.data) setLocalTicket(data.data);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }
-  }, [id, tickets]);
+      .catch(() => setLoading(false));
+  }, [id]);
 
   // 2. Assign To Me
   const handleAssignToMe = async () => {
