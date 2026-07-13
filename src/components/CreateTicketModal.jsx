@@ -48,26 +48,25 @@ export default function CreateTicketModal({ onClose, onSubmit, user }) {
 
     setIsSubmitting(true);
 
-    // Prepare payload for backend
-    // Note: 'created_by' is usually handled by the backend via JWT/Session
-    const payload = {
-      name: formData.name,
-      description: formData.description,
-      priority: formData.priority.toLowerCase(),
-      status: "open",
-      created_by: user?._id,
-      category: formData.category,
-      assign_to: null
-    };
+    // Prepare payload for backend using FormData to support file upload
+    const formDataPayload = new FormData();
+    formDataPayload.append("name", formData.name);
+    formDataPayload.append("description", formData.description);
+    formDataPayload.append("priority", formData.priority.toLowerCase());
+    formDataPayload.append("status", "open");
+    formDataPayload.append("category", formData.category);
+    
+    if (attachedFile) {
+      formDataPayload.append("file", attachedFile);
+    }
 
     try {
       const response = await fetch("https://punto-production-21ed.up.railway.app/api/v1/tickets", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify(payload),
+        body: formDataPayload,
       });
 
       const data = await response.json();

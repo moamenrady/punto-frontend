@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import axios from 'axios';
 import AssignMemberModal from '../components/AssignMemberModal';
 import Avatar from '../components/Avatar';
 import HelpSolveModal from '../components/HelpSolveModal';
@@ -34,6 +35,75 @@ const AccentTitle = ({ title }) => {
       <span className="accent">{words[1]}</span>
       {words.length > 2 ? ' ' + words.slice(2).join(' ') : ''}
     </>
+  );
+};
+
+const AttachmentViewer = ({ ticketId, attachmentIndex, attachment }) => {
+  const [imgSrc, setImgSrc] = useState(null);
+
+  useEffect(() => {
+    if (attachment && attachment.data) {
+      try {
+        const rawData = attachment.data.data || attachment.data;
+        if (Array.isArray(rawData)) {
+          const blob = new Blob([new Uint8Array(rawData)], { type: attachment.contentType });
+          const url = URL.createObjectURL(blob);
+          setImgSrc(url);
+          return () => URL.revokeObjectURL(url);
+        }
+      } catch (err) {
+        console.error("Failed to parse local attachment data", err);
+      }
+    }
+
+    let isMounted = true;
+    const fetchAttachment = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `https://punto-production-21ed.up.railway.app/api/v1/tickets/${ticketId}/attachments/${attachmentIndex}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: "blob"
+          }
+        );
+        if (isMounted) {
+          const url = URL.createObjectURL(res.data);
+          setImgSrc(url);
+        }
+      } catch (err) {
+        console.error("Failed to fetch attachment from endpoint", err);
+      }
+    };
+    fetchAttachment();
+    return () => {
+      isMounted = false;
+    };
+  }, [ticketId, attachmentIndex, attachment]);
+
+  if (!imgSrc) {
+    return (
+      <div className="flex items-center gap-2 p-4 border rounded-2xl bg-gray-50/50 dark:bg-white/5">
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-500 border-t-transparent" />
+        <span className="text-xs text-gray-500 font-medium">Loading attachment...</span>
+      </div>
+    );
+  }
+
+  const filename = attachment.filename || `Attachment-${attachmentIndex}`;
+
+  return (
+    <div className="border rounded-2xl overflow-hidden bg-white dark:bg-[#1E1B3A] shadow-sm max-w-sm flex flex-col">
+      <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900/40 p-2 flex items-center justify-center min-h-[160px]">
+        <img src={imgSrc} alt={filename} className="max-w-full max-h-40 object-contain rounded-lg shadow-sm" />
+      </div>
+      <div className="p-3 bg-gray-50/80 dark:bg-[#15132d] text-xs flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
+        <span className="truncate font-semibold text-gray-700 dark:text-gray-300 max-w-[180px]">{filename}</span>
+        <a href={imgSrc} download={filename} className="text-purple-600 dark:text-purple-400 font-bold hover:underline">
+          Download
+        </a>
+      </div>
+    </div>
   );
 };
 
@@ -222,6 +292,22 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
           <div className="td-card">
             <p className="td-card-title">Full Description</p>
             <p className="td-description-text" style={{ whiteSpace: 'pre-wrap' }}>{localTicket.description}</p>
+
+            {localTicket.attachments && localTicket.attachments.length > 0 && (
+              <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
+                <p className="td-card-title mb-3">Attachments</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {localTicket.attachments.map((att, idx) => (
+                    <AttachmentViewer
+                      key={att._id || idx}
+                      ticketId={localTicket._id}
+                      attachmentIndex={idx}
+                      attachment={att}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
