@@ -33,6 +33,13 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
   const [inviteSuccessMsg, setInviteSuccessMsg] = useState("");
   const [isInviting, setIsInviting] = useState(false);
 
+  // Create Department Modal
+  const [showCreateDeptModal, setShowCreateDeptModal] = useState(false);
+  const [newDeptName, setNewDeptName] = useState("");
+  const [createDeptError, setCreateDeptError] = useState("");
+  const [createDeptSuccessMsg, setCreateDeptSuccessMsg] = useState("");
+  const [isCreatingDept, setIsCreatingDept] = useState(false);
+
   // ─── Fetch company (with departments) ───────────────────────────────────────
   const fetchCompany = useCallback(async () => {
     setFetchingCompany(true);
@@ -90,6 +97,61 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
   const resolveUser = (memberId) => {
     const id = typeof memberId === "object" ? memberId._id || memberId : memberId;
     return users.find(u => u._id === id) || { _id: id, name: "Unknown", email: "" };
+  };
+
+  // ─── Create Department Handlers ──────────────────────────────────────────────
+  const closeCreateDeptModal = () => {
+    setShowCreateDeptModal(false);
+    setNewDeptName("");
+    setCreateDeptError("");
+    setCreateDeptSuccessMsg("");
+  };
+
+  const handleCreateDeptSubmit = async (e) => {
+    e.preventDefault();
+    if (!newDeptName.trim()) return;
+    setIsCreatingDept(true);
+    setCreateDeptError("");
+    setCreateDeptSuccessMsg("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${BASE}/companies/my-company/departments`,
+        { name: newDeptName.trim() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCreateDeptSuccessMsg("Department created successfully!");
+      if (res.data.status === "success" && res.data.data.company) {
+        const c = res.data.data.company;
+        setCompany(c);
+        setDepartments(Array.isArray(c.departments) ? c.departments : []);
+      }
+      setTimeout(() => {
+        closeCreateDeptModal();
+      }, 1500);
+    } catch (err) {
+      setCreateDeptError(err.response?.data?.message || "Failed to create department");
+    } finally {
+      setIsCreatingDept(false);
+    }
+  };
+
+  const handleDeleteDept = async (deptId) => {
+    if (!window.confirm("Are you sure you want to delete this department?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.delete(
+        `${BASE}/companies/my-company/departments/${deptId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.status === "success" && res.data.data.company) {
+        const c = res.data.data.company;
+        setCompany(c);
+        setDepartments(Array.isArray(c.departments) ? c.departments : []);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete department");
+    }
   };
 
   // ─── Open invite modal for a specific department ─────────────────────────────
@@ -253,6 +315,13 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                 {departments.length} department{departments.length !== 1 ? "s" : ""} in your organisation.
               </p>
             </div>
+            <button
+              onClick={() => setShowCreateDeptModal(true)}
+              className="py-2 px-4 rounded-xl text-white font-bold bg-purple-600 hover:bg-purple-700 text-xs transition-all flex items-center gap-1 shadow-md self-start sm:self-center"
+            >
+              <Plus size={14} />
+              Add Department
+            </button>
           </div>
 
           {/* Loading state */}
@@ -301,7 +370,7 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                       </div>
 
                       {/* Add user button – stops propagation so click doesn't toggle collapse */}
-                      <div onClick={e => e.stopPropagation()}>
+                      <div onClick={e => e.stopPropagation()} className="flex items-center gap-2">
                         <button
                           onClick={() => openInviteModal(dept)}
                           className={`p-1.5 rounded-lg border ${theme.border} hover:bg-purple-500 hover:text-white transition-all ${theme.textP}`}
@@ -309,6 +378,18 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                         >
                           <Plus size={14} />
                         </button>
+                        {memberCount === 0 && (
+                          <button
+                            onClick={() => handleDeleteDept(dept._id)}
+                            className={`p-1.5 rounded-lg border border-red-200 dark:border-red-900/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-transparent transition-all flex items-center justify-center`}
+                            title={`Delete ${dept.name} department`}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -472,6 +553,78 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                     : isInviting
                       ? <Loader2 className="animate-spin" size={16} />
                       : "Add User"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Create Department Modal ── */}
+      {showCreateDeptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]">
+          <div className={`w-full max-w-md p-8 rounded-[40px] border ${theme.border} ${theme.input} shadow-2xl space-y-6`}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className={`text-xl font-bold ${theme.textP}`}>
+                  Create New Department
+                </h3>
+                <p className={`text-xs ${theme.textM} mt-1 opacity-70`}>
+                  Enter the name of the new department.
+                </p>
+              </div>
+              <button
+                onClick={closeCreateDeptModal}
+                className={`p-2 rounded-full border ${theme.border} hover:bg-gray-100 dark:hover:bg-[#1E1B3A] transition-all ${theme.textP}`}
+              >
+                <Plus size={18} className="rotate-45" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCreateDeptSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className={`text-xs font-semibold ${theme.textM}`}>Department Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Finance, Marketing, IT"
+                  value={newDeptName}
+                  onChange={(e) => setNewDeptName(e.target.value)}
+                  className={`w-full px-4 py-3 rounded-xl border outline-none ${theme.border} ${theme.input} text-sm !text-black dark:!text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all`}
+                  required
+                  autoFocus
+                  disabled={isCreatingDept || !!createDeptSuccessMsg}
+                />
+              </div>
+
+              {createDeptError && (
+                <p className="text-xs font-bold text-red-500 text-center">{createDeptError}</p>
+              )}
+              {createDeptSuccessMsg && (
+                <p className="text-xs font-bold text-green-500 text-center">{createDeptSuccessMsg}</p>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeCreateDeptModal}
+                  disabled={isCreatingDept || !!createDeptSuccessMsg}
+                  className={`flex-1 py-3 rounded-xl border ${theme.border} hover:bg-gray-100 dark:hover:bg-[#1E1B3A] text-xs font-bold transition-all ${theme.textP}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingDept || !!createDeptSuccessMsg}
+                  className="flex-1 py-3 rounded-xl text-white font-bold bg-purple-600 hover:bg-purple-700 text-xs transition-all flex justify-center items-center"
+                >
+                  {createDeptSuccessMsg
+                    ? "Created!"
+                    : isCreatingDept
+                      ? <Loader2 className="animate-spin" size={16} />
+                      : "Create Department"}
                 </button>
               </div>
             </form>
