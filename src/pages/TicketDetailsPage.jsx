@@ -133,12 +133,23 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
     })
       .then(res => res.json())
       .then(data => {
+        console.log("[TicketDetails] API response:", data);
         // getOne factory returns { status, data: { doc } }
+        // getAllTickets returns { status, data: { data: [...] } }
         const ticket = data?.data?.doc || data?.data?.data || data?.data;
-        if (ticket && ticket._id) setLocalTicket(ticket);
+        console.log("[TicketDetails] Parsed ticket:", ticket);
+        if (ticket && ticket._id) {
+          setLocalTicket(ticket);
+        } else if (found) {
+          // Fallback: keep stale prop but try to merge resolution from response
+          console.warn("[TicketDetails] Could not parse fresh ticket, keeping stale");
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("[TicketDetails] Fetch error:", err);
+        setLoading(false);
+      });
   }, [id]);
 
   // 2. Assign To Me
