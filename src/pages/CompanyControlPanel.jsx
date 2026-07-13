@@ -520,7 +520,8 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                   placeholder="Enter email to invite"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none ${theme.border} ${theme.input} text-sm !text-black dark:!text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all`}
+                  className={`w-full px-4 py-3 rounded-xl border outline-none ${theme.border} ${theme.input} text-sm placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all`}
+                  style={{ color: theme.textP?.includes('1E1B3A') ? '#1E1B3A' : '#E2E0FF' }}
                   required
                   autoFocus
                   disabled={isInviting || !!inviteSuccessMsg}
@@ -592,7 +593,8 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                   placeholder="e.g. Finance, Marketing, IT"
                   value={newDeptName}
                   onChange={(e) => setNewDeptName(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-xl border outline-none ${theme.border} ${theme.input} text-sm !text-black dark:!text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all`}
+                  className={`w-full px-4 py-3 rounded-xl border outline-none ${theme.border} ${theme.input} text-sm placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all`}
+                  style={{ color: theme.textP?.includes('1E1B3A') ? '#1E1B3A' : '#E2E0FF' }}
                   required
                   autoFocus
                   disabled={isCreatingDept || !!createDeptSuccessMsg}
