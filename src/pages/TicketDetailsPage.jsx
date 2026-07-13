@@ -115,6 +115,7 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
   const [solution, setSolution] = useState("");
   const [loading, setLoading] = useState(true);
   const [showHelpSolve, setShowHelpSolve] = useState(false);
+  const [resolveError, setResolveError] = useState("");
 
   const API_BASE = "https://punto-production-21ed.up.railway.app/api/v1/tickets";
 
@@ -165,7 +166,11 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
 
   // 3. Resolve Ticket
   const handleResolveTicket = async () => {
-    if (!solution.trim()) return alert("Please provide a solution description.");
+    if (!solution.trim()) {
+      setResolveError("Please provide a solution description.");
+      return;
+    }
+    setResolveError("");
     setIsUpdating(true);
     const token = localStorage.getItem("token");
     try {
@@ -176,17 +181,22 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
           'Authorization': token ? `Bearer ${token}` : ''
         },
         body: JSON.stringify({ 
-          status: 'closed',
-          description: localTicket.description + "\n\nRESOLUTION: " + solution 
+          status: 'resolved'
         })
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        setLocalTicket({ ...localTicket, status: 'closed' });
+        setLocalTicket({ ...localTicket, status: 'resolved' });
         setShowResolveForm(false);
+        setSolution("");
+      } else {
+        setResolveError(data?.message || "Failed to resolve ticket. Please try again.");
       }
     } catch (err) {
       console.error(err);
+      setResolveError("Network error. Please try again.");
     } finally {
       setIsUpdating(false);
     }
@@ -205,7 +215,7 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
 
   const createdBy = localTicket.created_by || {};
   const assignTo = localTicket.assign_to || null;
-  const isAssignedToMe = assignTo?._id === user?._id;
+  const isAssignedToMe = assignTo?._id?.toString() === user?._id?.toString();
 
   return (
     <div className="td-bg">
@@ -262,11 +272,14 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
                 value={solution}
                 onChange={(e) => setSolution(e.target.value)}
               />
+              {resolveError && (
+                <p style={{ color: '#DC2626', fontSize: 13, marginTop: 8, fontWeight: 500 }}>{resolveError}</p>
+              )}
               <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                 <button className="ds-btn ds-btn-primary" style={{ backgroundColor: '#10B981' }} onClick={handleResolveTicket} disabled={isUpdating}>
-                  Submit Resolution
+                  {isUpdating ? 'Submitting...' : 'Submit Resolution'}
                 </button>
-                <button className="ds-btn ds-btn-secondary" onClick={() => setShowResolveForm(false)}>Cancel</button>
+                <button className="ds-btn ds-btn-secondary" onClick={() => { setShowResolveForm(false); setResolveError(""); }}>Cancel</button>
               </div>
             </div>
           )}
