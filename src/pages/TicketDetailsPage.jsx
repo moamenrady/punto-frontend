@@ -46,7 +46,7 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
   const [loading, setLoading] = useState(true);
   const [showHelpSolve, setShowHelpSolve] = useState(false);
 
-  const API_BASE = "https://itmgmtbackend-production.up.railway.app/api/v1/tickets";
+  const API_BASE = "https://punto-production-21ed.up.railway.app/api/v1/tickets";
 
   // 1. Initial Load: Find in props or fetch from API
   useEffect(() => {
@@ -56,7 +56,10 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
       setLoading(false);
     } else {
       // If not in props (happens after resolve/refresh), fetch directly
-      fetch(`${API_BASE}/${id}`)
+      const token = localStorage.getItem("token");
+      fetch(`${API_BASE}/${id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
         .then(res => res.json())
         .then(data => {
           if (data.data) setLocalTicket(data.data);
@@ -70,10 +73,14 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
   const handleAssignToMe = async () => {
     if (!user?._id) return alert("User session not found.");
     setIsUpdating(true);
+    const token = localStorage.getItem("token");
     try {
       const response = await fetch(`${API_BASE}/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify({ assign_to: user._id, status: 'in_progress' })
       });
       if (response.ok) {
@@ -90,10 +97,14 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
   const handleResolveTicket = async () => {
     if (!solution.trim()) return alert("Please provide a solution description.");
     setIsUpdating(true);
+    const token = localStorage.getItem("token");
     try {
       const response = await fetch(`${API_BASE}/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
         body: JSON.stringify({ 
           status: 'closed',
           description: localTicket.description + "\n\nRESOLUTION: " + solution 
