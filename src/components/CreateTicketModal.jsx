@@ -9,7 +9,6 @@ export default function CreateTicketModal({ onClose, onSubmit, user }) {
     subcategory: "", 
     priority: "low", // Default to 'low' as per your model
     description: "", 
-    assignToMe: true,
   });
   
   const [errors, setErrors] = useState({});
@@ -58,7 +57,7 @@ export default function CreateTicketModal({ onClose, onSubmit, user }) {
       status: "open",
       created_by: user?._id,
       category: formData.category,
-      assign_to: formData.assignToMe ? user?._id : null
+      assign_to: null
     };
 
     try {
@@ -244,26 +243,6 @@ export default function CreateTicketModal({ onClose, onSubmit, user }) {
                 <span style={{ fontSize: '0.72rem', color: '#9CA3AF', lineHeight: 1.4 }}>
                   {attachedFile ? attachedFile.name : 'Drag & Drop\nor Click to Upload'}
                 </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#374151' }}>Assign to Me</span>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => setFormData((p) => ({ ...p, assignToMe: !p.assignToMe }))}
-                  style={{
-                    width: 38, height: 22, borderRadius: 11, border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    background: formData.assignToMe ? '#8A9FE8' : '#D1D5DB',
-                    position: 'relative', transition: 'background 0.2s', flexShrink: 0
-                  }}
-                >
-                  <span style={{
-                    position: 'absolute', top: 2, width: 18, height: 18, borderRadius: '50%',
-                    background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.15)', transition: 'left 0.2s',
-                    left: formData.assignToMe ? 18 : 2
-                  }} />
-                </button>
               </div>
             </div>
           </div>
