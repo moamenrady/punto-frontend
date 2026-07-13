@@ -212,6 +212,8 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
               <div className="td-creator-grid">
                 <div><div className="td-field-label">Full Name</div><div className="td-field-value">{createdBy.name}</div></div>
                 <div><div className="td-field-label">Role</div><div className="td-field-value">{createdBy.role}</div></div>
+                <div><div className="td-field-label">Email</div><div className="td-field-value">{createdBy.email || 'N/A'}</div></div>
+                <div><div className="td-field-label">Phone</div><div className="td-field-value">{createdBy.phone || 'N/A'}</div></div>
                 <div><div className="td-field-label">Created</div><div className="td-field-value">{localTicket.createdAt}</div></div>
               </div>
             </div>
