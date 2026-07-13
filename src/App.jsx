@@ -37,7 +37,11 @@ function MainApp({ themeObj, theme, setTheme, isDarkMode, setIsDarkMode, user, s
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [company, setCompany] = useState(null);
-  const isAdmin = user?.role === "admin" || user?.role === "manager";
+  const isAdmin =
+    user?.role === "admin" ||
+    user?.role === "manager" ||
+    user?.dept?.toLowerCase() === "it" ||
+    user?.dept?.toLowerCase() === "it department";
   const isManager = user?.role === "manager";
 
   const API_URL = "https://punto-production-21ed.up.railway.app/api/v1/tickets";

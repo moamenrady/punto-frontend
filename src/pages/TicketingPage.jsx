@@ -38,7 +38,11 @@ export default function TicketingPage({
 
   const { toasts, close: closeToast, success: toastSuccess, error: toastError } = useToast();
 
-  const isAdmin = user?.role === "admin" || user?.role === "manager";
+  const isAdmin =
+    user?.role === "admin" ||
+    user?.role === "manager" ||
+    user?.dept?.toLowerCase() === "it" ||
+    user?.dept?.toLowerCase() === "it department";
 
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 60000);
