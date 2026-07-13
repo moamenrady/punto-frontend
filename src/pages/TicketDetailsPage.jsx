@@ -181,14 +181,15 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
           'Authorization': token ? `Bearer ${token}` : ''
         },
         body: JSON.stringify({ 
-          status: 'resolved'
+          status: 'resolved',
+          resolution: solution
         })
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setLocalTicket({ ...localTicket, status: 'resolved' });
+        setLocalTicket({ ...localTicket, status: 'resolved', resolution: solution });
         setShowResolveForm(false);
         setSolution("");
       } else {
@@ -322,6 +323,18 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
               </div>
             )}
           </div>
+
+          {localTicket.resolution && (
+            <div className="td-card" style={{ border: '2px solid #10B981', background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 18 }}>✅</span>
+                <p className="td-card-title" style={{ color: '#166534', margin: 0 }}>IT Response</p>
+              </div>
+              <p className="td-description-text" style={{ whiteSpace: 'pre-wrap', color: '#15803D', fontWeight: 500 }}>
+                {localTicket.resolution}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="td-details-card">
