@@ -40,6 +40,12 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
   const [createDeptSuccessMsg, setCreateDeptSuccessMsg] = useState("");
   const [isCreatingDept, setIsCreatingDept] = useState(false);
 
+  // Delete Confirmation Modal
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deptToDelete, setDeptToDelete] = useState(null);
+  const [isDeletingDeptConfirm, setIsDeletingDeptConfirm] = useState(false);
+  const [deleteDeptError, setDeleteDeptError] = useState("");
+
   // ─── Fetch company (with departments) ───────────────────────────────────────
   const fetchCompany = useCallback(async () => {
     setFetchingCompany(true);
@@ -136,12 +142,20 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
     }
   };
 
-  const handleDeleteDept = async (deptId) => {
-    if (!window.confirm("Are you sure you want to delete this department?")) return;
+  const handleDeleteDept = (dept) => {
+    setDeptToDelete(dept);
+    setDeleteDeptError("");
+    setShowDeleteConfirmModal(true);
+  };
+
+  const confirmDeleteDept = async () => {
+    if (!deptToDelete) return;
+    setIsDeletingDeptConfirm(true);
+    setDeleteDeptError("");
     try {
       const token = localStorage.getItem("token");
       const res = await axios.delete(
-        `${BASE}/companies/my-company/departments/${deptId}`,
+        `${BASE}/companies/my-company/departments/${deptToDelete._id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.status === "success" && res.data.data.company) {
@@ -149,8 +163,12 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
         setCompany(c);
         setDepartments(Array.isArray(c.departments) ? c.departments : []);
       }
+      setShowDeleteConfirmModal(false);
+      setDeptToDelete(null);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete department");
+      setDeleteDeptError(err.response?.data?.message || "Failed to delete department");
+    } finally {
+      setIsDeletingDeptConfirm(false);
     }
   };
 
@@ -380,7 +398,7 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                         </button>
                         {memberCount === 0 && (
                           <button
-                            onClick={() => handleDeleteDept(dept._id)}
+                            onClick={() => handleDeleteDept(dept)}
                             className={`p-1.5 rounded-lg border border-red-200 dark:border-red-900/50 text-red-500 hover:bg-red-500 hover:text-white hover:border-transparent transition-all flex items-center justify-center`}
                             title={`Delete ${dept.name} department`}
                           >
@@ -630,6 +648,67 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {showDeleteConfirmModal && deptToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]">
+          <div className={`w-full max-w-md p-8 rounded-[40px] border ${theme.border} ${theme.input} shadow-2xl space-y-6`}>
+
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className={`text-xl font-bold ${theme.textP} flex items-center gap-2`}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  Delete Department
+                </h3>
+                <p className={`text-xs ${theme.textM} mt-1 opacity-70`}>
+                  This action cannot be undone.
+                </p>
+              </div>
+              <button
+                onClick={() => { setShowDeleteConfirmModal(false); setDeptToDelete(null); }}
+                className={`p-2 rounded-full border ${theme.border} hover:bg-gray-100 dark:hover:bg-[#1E1B3A] transition-all ${theme.textP}`}
+              >
+                <Plus size={18} className="rotate-45" />
+              </button>
+            </div>
+
+            <div className={`text-sm ${theme.textP}`}>
+              Are you sure you want to delete the department <strong className="text-red-500 font-bold">"{deptToDelete.name}"</strong>?
+            </div>
+
+            {deleteDeptError && (
+              <p className="text-xs font-bold text-red-500 text-center">{deleteDeptError}</p>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirmModal(false); setDeptToDelete(null); }}
+                disabled={isDeletingDeptConfirm}
+                className={`flex-1 py-3 rounded-xl border ${theme.border} hover:bg-gray-100 dark:hover:bg-[#1E1B3A] text-xs font-bold transition-all ${theme.textP}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteDept}
+                disabled={isDeletingDeptConfirm}
+                className="flex-1 py-3 rounded-xl text-white font-bold bg-red-600 hover:bg-red-700 text-xs transition-all flex justify-center items-center gap-1 shadow-md shadow-red-500/10"
+              >
+                {isDeletingDeptConfirm ? (
+                  <Loader2 className="animate-spin" size={16} />
+                ) : (
+                  "Yes, Delete"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
