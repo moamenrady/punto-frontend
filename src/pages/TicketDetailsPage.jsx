@@ -119,38 +119,26 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
 
   const API_BASE = "https://punto-production-21ed.up.railway.app/api/v1/tickets";
 
-  // 1. Always fetch fresh ticket data from API so resolution/status are up to date
+  // 1. Initial Load: Find in props or fetch from API
   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    // Show stale prop data instantly while fresh data loads
     const found = tickets.find((t) => t._id === id || t.id === id);
-    if (found) setLocalTicket(found);
-
-    // Always fetch latest from server
-    fetch(`${API_BASE}/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log("[TicketDetails] API response:", data);
-        // getOne factory returns { status, data: { doc } }
-        // getAllTickets returns { status, data: { data: [...] } }
-        const ticket = data?.data?.doc || data?.data?.data || data?.data;
-        console.log("[TicketDetails] Parsed ticket:", ticket);
-        if (ticket && ticket._id) {
-          setLocalTicket(ticket);
-        } else if (found) {
-          // Fallback: keep stale prop but try to merge resolution from response
-          console.warn("[TicketDetails] Could not parse fresh ticket, keeping stale");
-        }
-        setLoading(false);
+    if (found) {
+      setLocalTicket(found);
+      setLoading(false);
+    } else {
+      // If not in props (happens after resolve/refresh), fetch directly
+      const token = localStorage.getItem("token");
+      fetch(`${API_BASE}/${id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       })
-      .catch((err) => {
-        console.error("[TicketDetails] Fetch error:", err);
-        setLoading(false);
-      });
-  }, [id]);
+        .then(res => res.json())
+        .then(data => {
+          if (data.data) setLocalTicket(data.data);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, [id, tickets]);
 
   // 2. Assign To Me
   const handleAssignToMe = async () => {
@@ -194,14 +182,14 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
         },
         body: JSON.stringify({ 
           status: 'resolved',
-          solution: solution
+          resolution: solution
         })
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setLocalTicket({ ...localTicket, status: 'resolved', solution: solution });
+        setLocalTicket({ ...localTicket, status: 'resolved', resolution: solution });
         setShowResolveForm(false);
         setSolution("");
       } else {
@@ -336,14 +324,14 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
             )}
           </div>
 
-          {localTicket.solution && (
+          {localTicket.resolution && (
             <div className="td-card" style={{ border: '2px solid #10B981', background: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                 <span style={{ fontSize: 18 }}>✅</span>
                 <p className="td-card-title" style={{ color: '#166534', margin: 0 }}>IT Response</p>
               </div>
               <p className="td-description-text" style={{ whiteSpace: 'pre-wrap', color: '#15803D', fontWeight: 500 }}>
-                {localTicket.solution}
+                {localTicket.resolution}
               </p>
             </div>
           )}
