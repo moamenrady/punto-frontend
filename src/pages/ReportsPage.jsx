@@ -1010,27 +1010,6 @@ function TabSprints({ t }) {
     return { sprint:`S${i+1}`, pct }
   })
 
-  // ── Computed style values from C ──────────────────────
-  const pageBg    = C.bg;
-  const headerBg  = C.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.7)';
-  const tabBarBg  = C.isDark ? 'rgba(255,255,255,0.025)' : 'rgba(83,74,183,0.05)';
-  const btnBase   = { background: C.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(83,74,183,0.06)', border: `1px solid ${C.border}`, color: C.muted };
-
-  if (!isAdmin) {
-    return (
-      <ThemeCtx.Provider value={C}>
-        <div style={{ background: pageBg, borderRadius: 16, minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center', padding: 40 }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: `${C.red}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <Lock size={28} color={C.red} />
-            </div>
-            <h3 style={{ margin: '0 0 8px', fontWeight: 800, color: C.text, fontSize: 18 }}>Access Restricted</h3>
-            <p style={{ margin: 0, color: C.muted, fontSize: 13 }}>Reports &amp; Analytics is available for admin and manager roles only.</p>
-          </div>
-        </div>
-      </ThemeCtx.Provider>
-    );
-  }
 
   return (
     <div style={{ display:'flex',flexDirection:'column',gap:20 }}>
