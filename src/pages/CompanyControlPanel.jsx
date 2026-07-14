@@ -10,7 +10,8 @@ import {
   ChevronDown,
   ChevronRight,
   Briefcase,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Search
 } from "lucide-react";
 import axios from "axios";
 import Avatar from "../components/Avatar";
@@ -94,10 +95,35 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
     }
   }, []);
 
+  const [authData, setAuthData] = useState(null);
+  const [fetchingAuth, setFetchingAuth] = useState(false);
+  const [activeTab, setActiveTab] = useState("projects");
+  const [selectedAuthItem, setSelectedAuthItem] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authSearchQuery, setAuthSearchQuery] = useState("");
+
+  const fetchAuthData = useCallback(async () => {
+    setFetchingAuth(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${BASE}/companies/my-company/authorization-check`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.status === "success") {
+        setAuthData(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching authorization check data:", err);
+    } finally {
+      setFetchingAuth(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCompany();
     fetchUsers();
-  }, [fetchCompany, fetchUsers]);
+    fetchAuthData();
+  }, [fetchCompany, fetchUsers, fetchAuthData]);
 
   // ─── Resolve a member id → user object ──────────────────────────────────────
   const resolveUser = (memberId) => {
@@ -512,6 +538,99 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
         </div>
       </div>
 
+      {/* ── Check Authorization Section ── */}
+      <div className={`mt-12 p-8 rounded-[40px] border ${theme.border} ${theme.input} shadow-xl space-y-6`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6" style={{ borderColor: `${theme.primary}20` }}>
+          <div>
+            <h3 className={`text-2xl font-extrabold flex items-center gap-3 ${theme.textP}`}>
+              <ShieldCheck className="text-emerald-500" size={28} />
+              Check Authorization
+            </h3>
+            <p className={`text-xs ${theme.textM} mt-1 opacity-85`}>
+              Verify access permissions and view who can access specific resources in the company.
+            </p>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex flex-wrap bg-gray-100/80 dark:bg-[#12102A] p-1.5 rounded-2xl border border-transparent dark:border-[#2E2B5A] gap-1 self-start sm:self-center shadow-inner">
+            {[
+              { id: "projects", label: "Projects", count: authData?.projects?.length || 0 },
+              { id: "teams", label: "Teams", count: authData?.teams?.length || 0 },
+              { id: "pages", label: "Pages/Sheets", count: authData?.pages?.length || 0 },
+              { id: "groupChats", label: "Group Chats", count: authData?.groupChats?.length || 0 },
+              { id: "chats", label: "Private Chats", count: authData?.chats?.length || 0 }
+            ].map(tab => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    active
+                      ? "bg-purple-600 text-white shadow-md shadow-purple-500/20 scale-105"
+                      : `${theme.textM} hover:text-purple-500 hover:bg-purple-500/10`
+                  }`}
+                >
+                  {tab.label}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${active ? "bg-white/20 text-white" : "bg-purple-500/10 text-purple-600 dark:text-purple-400"}`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Resource Items Grid */}
+        {fetchingAuth ? (
+          <div className="flex flex-col items-center py-16 gap-3">
+            <Loader2 className="animate-spin text-purple-600" size={32} />
+            <p className="text-xs text-gray-500 font-medium">Checking authorizations…</p>
+          </div>
+        ) : !authData || !authData[activeTab] || authData[activeTab].length === 0 ? (
+          <div className="text-center py-16">
+            <FolderPlus className="mx-auto text-purple-300/40 mb-4" size={48} />
+            <p className={`text-sm font-semibold ${theme.textP}`}>No resources found</p>
+            <p className={`text-xs ${theme.textM} mt-1 opacity-70`}>
+              Resources in this category will appear here once they are created in your company.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {authData[activeTab].map(item => (
+              <div
+                key={item._id}
+                className={`p-6 rounded-3xl border ${theme.border} bg-white/40 dark:bg-white/5 hover:border-purple-500/40 hover:shadow-lg transition-all duration-300 group flex items-center justify-between gap-4`}
+              >
+                <div className="min-w-0 flex-1">
+                  <h4 className={`font-bold text-sm truncate ${theme.textP}`} title={item.name}>
+                    {item.name}
+                  </h4>
+                  <p className={`text-xs ${theme.textM} mt-1 truncate opacity-70`}>
+                    {item.description || "No description provided."}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-3 text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/5 px-2 py-1 rounded-lg w-max">
+                    <Users size={12} />
+                    <span>{item.authorizedUsers?.length || 0} users authorized</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedAuthItem({ ...item, resourceType: activeTab });
+                    setShowAuthModal(true);
+                  }}
+                  className={`p-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-500/20 hover:scale-110 active:scale-95 transition-all flex items-center justify-center`}
+                  title="Check authorized users"
+                >
+                  <Search size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* ── Invite Modal ── */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]">
@@ -715,6 +834,116 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
                 ) : (
                   "Yes, Delete"
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Authorized Users Modal ── */}
+      {showAuthModal && selectedAuthItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px]">
+          <div className={`w-full max-w-lg p-8 rounded-[40px] border ${theme.border} ${theme.input} shadow-2xl space-y-6 flex flex-col max-h-[90vh]`}>
+            {/* Header */}
+            <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: `${theme.primary}20` }}>
+              <div>
+                <h3 className={`text-xl font-bold flex items-center gap-2 ${theme.textP}`}>
+                  <ShieldCheck className="text-emerald-500" size={24} />
+                  Authorized Access List
+                </h3>
+                <p className={`text-xs ${theme.textM} mt-1 max-w-[360px] truncate`} title={selectedAuthItem.name}>
+                  For: <strong className="text-purple-500">{selectedAuthItem.name}</strong>
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setSelectedAuthItem(null);
+                  setAuthSearchQuery("");
+                }}
+                className={`p-2 rounded-full border ${theme.border} hover:bg-gray-100 dark:hover:bg-[#1E1B3A] transition-all ${theme.textP}`}
+              >
+                <Plus size={18} className="rotate-45" />
+              </button>
+            </div>
+
+            {/* User Search Input */}
+            <div className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${theme.border} ${theme.input}`}>
+              <Search size={18} className={theme.textM} />
+              <input
+                type="text"
+                placeholder="Search authorized users by name or email..."
+                value={authSearchQuery}
+                onChange={(e) => setAuthSearchQuery(e.target.value)}
+                className={`bg-transparent outline-none flex-1 text-sm ${theme.textP}`}
+                style={{ color: theme.textP?.includes('1E1B3A') ? '#1E1B3A' : '#E2E0FF' }}
+              />
+            </div>
+
+            {/* Users List */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {(() => {
+                const filtered = (selectedAuthItem.authorizedUsers || []).filter(u =>
+                  u.name?.toLowerCase().includes(authSearchQuery.toLowerCase()) ||
+                  u.email?.toLowerCase().includes(authSearchQuery.toLowerCase())
+                );
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-sm text-gray-500">
+                      No authorized users match your search.
+                    </div>
+                  );
+                }
+
+                return filtered.map(u => (
+                  <div
+                    key={u._id}
+                    className={`flex items-center justify-between gap-4 p-4 rounded-2xl border ${theme.border} bg-white/20 dark:bg-white/5 hover:bg-white/45 dark:hover:bg-white/10 transition-all`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar photo={u.photo} name={u.name} size={36} className="border border-purple-300" />
+                      <div className="min-w-0">
+                        <p className={`text-sm font-bold truncate ${theme.textP}`}>{u.name}</p>
+                        <p className={`text-xs ${theme.textM} truncate opacity-85`}>{u.email}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                      {u.role && (
+                        <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400`}>
+                          {u.role}
+                        </span>
+                      )}
+                      <div className="flex flex-wrap gap-1 justify-end max-w-[140px]">
+                        {u.reasons?.map((reason, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 uppercase tracking-wide"
+                            title={`Authorized because they are a ${reason}`}
+                          >
+                            {reason}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+
+            {/* Footer */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setSelectedAuthItem(null);
+                  setAuthSearchQuery("");
+                }}
+                className={`w-full py-3 rounded-xl border ${theme.border} hover:bg-gray-100 dark:hover:bg-[#1E1B3A] text-xs font-bold transition-all ${theme.textP}`}
+              >
+                Close
               </button>
             </div>
           </div>
