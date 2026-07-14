@@ -40,6 +40,6 @@ export const analyticsService = {
   // ── Sprint Analytics ──
   getBurndown:            (sprintId)  => request(`/sprints/analytics/burndown/${sprintId}`).then(j => j?.data),
   getVelocity:            (projectId) => request(`/sprints/analytics/velocity/${projectId}`).then(j => j?.data?.velocity ?? []),
-  getSprintStatusOverview:()          => request('/sprints/analytics/status-overview').then(j => j?.data?.overview ?? []),
-  getGlobalKPIs:          ()          => request('/sprints/analytics/global-kpis').then(j => j?.data),
+  getSprintStatusOverview:(projectId)  => request(`/sprints/analytics/status-overview${projectId ? `?projectId=${projectId}` : ''}`).then(j => j?.data?.overview ?? []),
+  getGlobalKPIs:          (projectId)  => request(`/sprints/analytics/global-kpis${projectId ? `?projectId=${projectId}` : ''}`).then(j => j?.data),
 };

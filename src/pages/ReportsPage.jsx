@@ -7,6 +7,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import { analyticsService } from '../services/analyticsService'
+import { projectService } from '../services/projectService'
 
 // ── Palette & constants ────────────────────────────────────────
 const P       = ['#7F6FF5','#3ECFAA','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#EC4899','#22C55E']
@@ -952,9 +953,10 @@ function TabWorkload({ t }) {
 // ══════════════════════════════════════════════════════════════
 //  TASKS & SPRINT ANALYSIS
 // ══════════════════════════════════════════════════════════════
-function TabSprints({ t }) {
-  const kpis     = useQuery({ queryKey:['sp-kpis'], queryFn: analyticsService.getGlobalKPIs,           staleTime:30000 })
-  const overview = useQuery({ queryKey:['sp-ovw'],  queryFn: analyticsService.getSprintStatusOverview, staleTime:30000 })
+function ProjectSprintsSection({ project, t }) {
+  const projectId = project._id;
+  const kpis     = useQuery({ queryKey:['sp-kpis', projectId], queryFn: () => analyticsService.getGlobalKPIs(projectId),           staleTime:30000 })
+  const overview = useQuery({ queryKey:['sp-ovw', projectId],  queryFn: () => analyticsService.getSprintStatusOverview(projectId), staleTime:30000 })
 
   const kd = kpis.data
   const ov = overview.data||[]
@@ -1010,26 +1012,41 @@ function TabSprints({ t }) {
     return { sprint:`S${i+1}`, pct }
   })
 
-
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:20 }}>
-
-      {!kpis.isLoading && (
-        <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(175px,1fr))',gap:14 }}>
-          <KPICard t={t} label="Avg Velocity"    value={kd?.avgVelocity}   color={t.primary} trend={8}   sub="Story points/sprint"/>
-          <KPICard t={t} label="Completion Rate" value={kd?.completionRate} color="#22C55E"  trend={4}   sub="Planned vs done"/>
-          <KPICard t={t} label="Active Sprints"  value={kd?.activeSprints}  color={t.accent}             sub="Currently running"/>
-          <KPICard t={t} label="Backlog Tasks"   value={kd?.backlogTasks}   color="#EF4444"  trend={-12} sub="In todo state"/>
+    <GC t={t} style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 28 }}>
+      {/* Project Title Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${t.rowBorder}`, paddingBottom: 16 }}>
+        <div>
+          <h2 style={{ fontSize: 18, fontWeight: 900, color: t.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span>📁</span> {project.name}
+          </h2>
+          {project.description && (
+            <p style={{ fontSize: 12, color: t.muted, margin: '4px 0 0' }}>{project.description}</p>
+          )}
         </div>
-      )}
+        <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 20, background: t.primaryBg, color: t.primary, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Project Analytics
+        </span>
+      </div>
 
-      {/* Sprint Velocity */}
-      <div>
-        <SH t={t} icon="🚀">Sprint Velocity</SH>
-        {overview.isLoading ? <GC t={t}><Spin t={t}/></GC> : velocityData.length===0
-          ? <GC t={t}><MT t={t} icon="🚀" title="No sprint data" sub="Appears once sprints are created"/></GC>
-          : (
-            <GC t={t}>
+      {kpis.isLoading || overview.isLoading ? (
+        <Spin t={t}/>
+      ) : (
+        <>
+          {/* KPI grid */}
+          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(175px,1fr))',gap:14 }}>
+            <KPICard t={t} label="Avg Velocity"    value={kd?.avgVelocity}   color={t.primary} trend={8}   sub="Story points/sprint"/>
+            <KPICard t={t} label="Completion Rate" value={kd?.completionRate} color="#22C55E"  trend={4}   sub="Planned vs done"/>
+            <KPICard t={t} label="Active Sprints"  value={kd?.activeSprints}  color={t.accent}             sub="Currently running"/>
+            <KPICard t={t} label="Backlog Tasks"   value={kd?.backlogTasks}   color="#EF4444"  trend={-12} sub="In todo state"/>
+          </div>
+
+          {/* Sprint Velocity */}
+          <div>
+            <SH t={t} icon="🚀">Sprint Velocity</SH>
+            {velocityData.length===0 ? (
+              <MT t={t} icon="🚀" title="No sprint data" sub="Appears once sprints are created in this project"/>
+            ) : (
               <ResponsiveContainer width="100%" height={230}>
                 <BarChart data={velocityData} margin={{top:10,right:10,left:-15,bottom:0}}>
                   <CartesianGrid stroke={t.grid} vertical={false}/>
@@ -1041,72 +1058,65 @@ function TabSprints({ t }) {
                   <Bar dataKey="completed" name="Completed" fill={t.accent}  radius={[4,4,0,0]} maxBarSize={24}/>
                 </BarChart>
               </ResponsiveContainer>
-            </GC>
-          )
-        }
-      </div>
+            )}
+          </div>
 
-      {/* Sprint Velocity Forecast */}
-      {velocityForecast.length > 0 && (
-        <div>
-          <SH t={t} icon="🔮" badge={<AIBadge/>}>Sprint Velocity Forecast</SH>
-          <GC t={t}>
-            <p style={{ fontSize:10,color:t.muted,margin:'0 0 12px',display:'flex',alignItems:'center',gap:6 }}>
-              <span>🔮</span> Moving average forecast — optimistic / base / pessimistic scenarios
-            </p>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={velocityForecast} margin={{top:10,right:10,left:-15,bottom:0}}>
-                <defs>
-                  <linearGradient id="gVFcast" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={t.primary} stopOpacity={0.35}/>
-                    <stop offset="95%" stopColor={t.primary} stopOpacity={0.05}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke={t.grid} strokeDasharray="4 4"/>
-                <XAxis dataKey="sprint"    tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
-                <YAxis                     tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
-                <Tooltip content={<CT t={t}/>}/>
-                <Legend wrapperStyle={{fontSize:11,color:t.muted,paddingTop:8}}/>
-                <Area type="monotone" dataKey="optimistic"  name="Optimistic"  stroke="#22C55E"   fill="url(#gVFcast)" strokeWidth={2} strokeDasharray="5 3" dot={{r:5,fill:'#22C55E',strokeWidth:0}}/>
-                <Area type="monotone" dataKey="base"        name="Base"        stroke={t.primary}  fill={t.primaryBg}  strokeWidth={2.5}                      dot={{r:5,fill:t.primary,strokeWidth:0}}/>
-                <Area type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="#EF4444"   fill="transparent"  strokeWidth={2} strokeDasharray="5 3" dot={{r:5,fill:'#EF4444',strokeWidth:0}}/>
-              </AreaChart>
-            </ResponsiveContainer>
-          </GC>
-        </div>
-      )}
+          {/* Sprint Velocity Forecast */}
+          {velocityForecast.length > 0 && completedVelocities.filter(Boolean).length >= 2 && (
+            <div>
+              <SH t={t} icon="🔮" badge={<AIBadge/>}>Sprint Velocity Forecast</SH>
+              <p style={{ fontSize:10,color:t.muted,margin:'0 0 12px',display:'flex',alignItems:'center',gap:6 }}>
+                <span>🔮</span> Moving average forecast — optimistic / base / pessimistic scenarios
+              </p>
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={velocityForecast} margin={{top:10,right:10,left:-15,bottom:0}}>
+                  <defs>
+                    <linearGradient id="gVFcast" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor={t.primary} stopOpacity={0.35}/>
+                      <stop offset="95%" stopColor={t.primary} stopOpacity={0.05}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke={t.grid} strokeDasharray="4 4"/>
+                  <XAxis dataKey="sprint"    tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
+                  <YAxis                     tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
+                  <Tooltip content={<CT t={t}/>}/>
+                  <Legend wrapperStyle={{fontSize:11,color:t.muted,paddingTop:8}}/>
+                  <Area type="monotone" dataKey="optimistic"  name="Optimistic"  stroke="#22C55E"   fill="url(#gVFcast)" strokeWidth={2} strokeDasharray="5 3" dot={{r:5,fill:'#22C55E',strokeWidth:0}}/>
+                  <Area type="monotone" dataKey="base"        name="Base"        stroke={t.primary}  fill={t.primaryBg}  strokeWidth={2.5}                      dot={{r:5,fill:t.primary,strokeWidth:0}}/>
+                  <Area type="monotone" dataKey="pessimistic" name="Pessimistic" stroke="#EF4444"   fill="transparent"  strokeWidth={2} strokeDasharray="5 3" dot={{r:5,fill:'#EF4444',strokeWidth:0}}/>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-      {/* Active Sprint Burndown */}
-      {burndownData.length > 0 && (
-        <div>
-          <SH t={t} icon="📉">Active Sprint Burndown</SH>
-          <GC t={t}>
-            <p style={{ fontSize:10,color:t.subtle,margin:'0 0 12px' }}>
-              Current sprint ({latestSprint?.sprintName||'Latest'}) — Remaining tasks vs ideal trajectory
-            </p>
-            <ResponsiveContainer width="100%" height={230}>
-              <LineChart data={burndownData} margin={{top:10,right:10,left:-15,bottom:0}}>
-                <CartesianGrid stroke={t.grid} strokeDasharray="4 4"/>
-                <XAxis dataKey="day"  tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
-                <YAxis               tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
-                <Tooltip content={<CT t={t}/>}/>
-                <Legend wrapperStyle={{fontSize:11,color:t.muted,paddingTop:8}}/>
-                <Line type="monotone" dataKey="actual" name="Actual Remaining" stroke="#F87171" strokeWidth={2.5} dot={{r:4,fill:'#F87171',strokeWidth:0}} activeDot={{r:6}}/>
-                <Line type="monotone" dataKey="ideal"  name="Ideal Burndown"  stroke={t.muted} strokeWidth={2} strokeDasharray="6 4" dot={{r:3,fill:t.muted,strokeWidth:0}}/>
-              </LineChart>
-            </ResponsiveContainer>
-          </GC>
-        </div>
-      )}
+          {/* Active Sprint Burndown */}
+          {burndownData.length > 0 && (
+            <div>
+              <SH t={t} icon="📉">Active Sprint Burndown</SH>
+              <p style={{ fontSize:10,color:t.subtle,margin:'0 0 12px' }}>
+                Current sprint ({latestSprint?.sprintName||'Latest'}) — Remaining tasks vs ideal trajectory
+              </p>
+              <ResponsiveContainer width="100%" height={230}>
+                <LineChart data={burndownData} margin={{top:10,right:10,left:-15,bottom:0}}>
+                  <CartesianGrid stroke={t.grid} strokeDasharray="4 4"/>
+                  <XAxis dataKey="day"  tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
+                  <YAxis               tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
+                  <Tooltip content={<CT t={t}/>}/>
+                  <Legend wrapperStyle={{fontSize:11,color:t.muted,paddingTop:8}}/>
+                  <Line type="monotone" dataKey="actual" name="Actual Remaining" stroke="#F87171" strokeWidth={2.5} dot={{r:4,fill:'#F87171',strokeWidth:0}} activeDot={{r:6}}/>
+                  <Line type="monotone" dataKey="ideal"  name="Ideal Trajectory"  stroke={t.muted} strokeWidth={2} strokeDasharray="6 4" dot={{r:3,fill:t.muted,strokeWidth:0}}/>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-      {/* Task Status + Sprint Health Radar */}
-      <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14 }}>
-        <div>
-          <SH t={t} icon="📊">Task Status Overview</SH>
-          {overview.isLoading ? <GC t={t}><Spin t={t}/></GC> : statusPie.length===0
-            ? <GC t={t}><MT t={t} icon="📊" title="No sprint data"/></GC>
-            : (
-              <GC t={t}>
+          {/* Task Status + Sprint Health Radar */}
+          <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14 }}>
+            <div>
+              <SH t={t} icon="📊">Task Status Overview</SH>
+              {statusPie.length===0 ? (
+                <MT t={t} icon="📊" title="No active sprint data"/>
+              ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie data={statusPie} cx="50%" cy="50%" outerRadius={85} paddingAngle={3}
@@ -1116,92 +1126,108 @@ function TabSprints({ t }) {
                     <Tooltip content={<CT t={t}/>}/>
                   </PieChart>
                 </ResponsiveContainer>
-              </GC>
-            )
-          }
-        </div>
-        <div>
-          <SH t={t} icon="🎯" badge={<FBadge label="SCORE"/>}>Sprint Health Radar</SH>
-          <GC t={t}>
-            <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={healthRadar} cx="50%" cy="50%" outerRadius={80}>
-                <PolarGrid stroke={t.glassBorder}/>
-                <PolarAngleAxis dataKey="metric" tick={{fill:t.muted,fontSize:10}}/>
-                <Radar name="Health Score" dataKey="val" stroke={t.accent} fill={t.accent} fillOpacity={0.2} strokeWidth={2}/>
-                <Tooltip content={<CT t={t}/>}/>
-              </RadarChart>
-            </ResponsiveContainer>
-          </GC>
-        </div>
-      </div>
+              )}
+            </div>
+            <div>
+              <SH t={t} icon="🎯" badge={<FBadge label="SCORE"/>}>Sprint Health Radar</SH>
+              <ResponsiveContainer width="100%" height={220}>
+                <RadarChart data={healthRadar} cx="50%" cy="50%" outerRadius={80}>
+                  <PolarGrid stroke={t.glassBorder}/>
+                  <PolarAngleAxis dataKey="metric" tick={{fill:t.muted,fontSize:10}}/>
+                  <Radar name="Health Score" dataKey="val" stroke={t.accent} fill={t.accent} fillOpacity={0.2} strokeWidth={2}/>
+                  <Tooltip content={<CT t={t}/>}/>
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
 
-      {/* Completion Rate Trend */}
-      {completionTrend.length > 0 && (
-        <div>
-          <SH t={t} icon="📈">Completion Rate Trend</SH>
-          <GC t={t}>
-            <ResponsiveContainer width="100%" height={210}>
-              <LineChart data={completionTrend} margin={{top:10,right:10,left:-15,bottom:0}}>
-                <CartesianGrid stroke={t.grid} strokeDasharray="4 4"/>
-                <XAxis dataKey="sprint" tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
-                <YAxis domain={[0,100]} tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false} tickFormatter={v=>`${v}%`}/>
-                <Tooltip content={<CT t={t}/>}/>
-                <Line type="monotone" dataKey="pct" name="Completion %" stroke="#F59E0B" strokeWidth={2.5}
-                  dot={{r:5,fill:'#F59E0B',strokeWidth:0}} activeDot={{r:7}}/>
-              </LineChart>
-            </ResponsiveContainer>
-          </GC>
-        </div>
+          {/* Completion Rate Trend */}
+          {completionTrend.length > 0 && (
+            <div>
+              <SH t={t} icon="📈">Completion Rate Trend</SH>
+              <ResponsiveContainer width="100%" height={210}>
+                <LineChart data={completionTrend} margin={{top:10,right:10,left:-15,bottom:0}}>
+                  <CartesianGrid stroke={t.grid} strokeDasharray="4 4"/>
+                  <XAxis dataKey="sprint" tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false}/>
+                  <YAxis domain={[0,100]} tick={{fill:t.axis,fontSize:11}} axisLine={false} tickLine={false} tickFormatter={v=>`${v}%`}/>
+                  <Tooltip content={<CT t={t}/>}/>
+                  <Line type="monotone" dataKey="pct" name="Completion %" stroke="#F59E0B" strokeWidth={2.5}
+                    dot={{r:5,fill:'#F59E0B',strokeWidth:0}} activeDot={{r:7}}/>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Sprint Status Table */}
+          <div>
+            <SH t={t}>Sprint Status Overview</SH>
+            {ov.length===0 ? (
+              <MT t={t} icon="🚀" title="No sprints created" sub="Sprint status details will appear here once you create a sprint."/>
+            ) : (
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                  <TH cols={['Sprint','Total','Status Breakdown','Completion']} t={t}/>
+                  <tbody>
+                    {ov.map((s,i)=>{
+                      const done=(s.statuses||[]).find(st=>st.status==='completed')?.count||0
+                      const pct =s.totalTasks?Math.round((done/s.totalTasks)*100):0
+                      const col =pct>=80?'#22C55E':pct>=50?'#F59E0B':t.primary
+                      return (
+                        <tr key={i} style={{borderBottom:`1px solid ${t.rowBorder}`}}>
+                          <td style={{padding:'12px 14px 12px 0',fontWeight:600,color:t.text}}>{s.sprintName}</td>
+                          <td style={{padding:'12px 14px 12px 0',color:t.muted}}>{s.totalTasks}</td>
+                          <td style={{padding:'12px 14px 12px 0'}}>
+                            <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                              {(s.statuses||[]).map((st,j)=>{
+                                const sc=st.status==='completed'?{bg:'rgba(34,197,94,0.14)',c:'#22C55E'}
+                                  :st.status==='in_progress'?{bg:'rgba(234,179,8,0.14)',c:'#CA8A04'}
+                                  :{bg:t.primaryBg,c:t.primary}
+                                return (
+                                  <span key={j} style={{padding:'2px 9px',borderRadius:20,fontSize:10,fontWeight:700,
+                                    background:sc.bg,color:sc.c,textTransform:'capitalize',whiteSpace:'nowrap'}}>
+                                    {st.status}: {st.count}
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          </td>
+                          <td style={{padding:'12px 0',minWidth:130}}>
+                            <div style={{display:'flex',alignItems:'center',gap:8}}>
+                              <div style={{flex:1}}><PB t={t} value={pct} color={col}/></div>
+                              <span style={{fontSize:11,fontWeight:800,color:col,width:36}}>{pct}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
       )}
+    </GC>
+  );
+}
 
-      {/* Sprint Status Table */}
-      <div>
-        <SH t={t}>Sprint Status Overview</SH>
-        {overview.isLoading ? <GC t={t}><Spin t={t}/></GC> : ov.length===0
-          ? <GC t={t}><MT t={t} icon="🚀" title="No sprint data" sub="Appears once sprints are created"/></GC>
-          : (
-            <GC t={t} style={{overflowX:'auto'}}>
-              <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-                <TH cols={['Sprint','Total','Status Breakdown','Completion']} t={t}/>
-                <tbody>
-                  {ov.map((s,i)=>{
-                    const done=(s.statuses||[]).find(st=>st.status==='completed')?.count||0
-                    const pct =s.totalTasks?Math.round((done/s.totalTasks)*100):0
-                    const col =pct>=80?'#22C55E':pct>=50?'#F59E0B':t.primary
-                    return (
-                      <tr key={i} style={{borderBottom:`1px solid ${t.rowBorder}`}}>
-                        <td style={{padding:'12px 14px 12px 0',fontWeight:600,color:t.text}}>{s.sprintName}</td>
-                        <td style={{padding:'12px 14px 12px 0',color:t.muted}}>{s.totalTasks}</td>
-                        <td style={{padding:'12px 14px 12px 0'}}>
-                          <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                            {(s.statuses||[]).map((st,j)=>{
-                              const sc=st.status==='completed'?{bg:'rgba(34,197,94,0.14)',c:'#22C55E'}
-                                :st.status==='in_progress'?{bg:'rgba(234,179,8,0.14)',c:'#CA8A04'}
-                                :{bg:t.primaryBg,c:t.primary}
-                              return (
-                                <span key={j} style={{padding:'2px 9px',borderRadius:20,fontSize:10,fontWeight:700,
-                                  background:sc.bg,color:sc.c,textTransform:'capitalize',whiteSpace:'nowrap'}}>
-                                  {st.status}: {st.count}
-                                </span>
-                              )
-                            })}
-                          </div>
-                        </td>
-                        <td style={{padding:'12px 0',minWidth:130}}>
-                          <div style={{display:'flex',alignItems:'center',gap:8}}>
-                            <div style={{flex:1}}><PB t={t} value={pct} color={col}/></div>
-                            <span style={{fontSize:11,fontWeight:800,color:col,width:36}}>{pct}%</span>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </GC>
-          )
-        }
-      </div>
+function TabSprints({ t }) {
+  const projectsQuery = useQuery({ queryKey:['sp-projects'], queryFn: projectService.getProjects, staleTime:30000 })
+  const projects = projectsQuery.data||[]
+
+  if (projectsQuery.isLoading) {
+    return <GC t={t}><Spin t={t}/></GC>
+  }
+
+  if (projects.length === 0) {
+    return <GC t={t}><MT t={t} icon="📁" title="No projects found" sub="Analytics will appear here once you create a project."/></GC>
+  }
+
+  return (
+    <div style={{ display:'flex',flexDirection:'column',gap:32 }}>
+      {projects.map((project) => (
+        <ProjectSprintsSection key={project._id} project={project} t={t}/>
+      ))}
     </div>
   )
 }
