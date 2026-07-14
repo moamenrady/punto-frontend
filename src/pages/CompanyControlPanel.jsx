@@ -97,7 +97,7 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
 
   const [authData, setAuthData] = useState(null);
   const [fetchingAuth, setFetchingAuth] = useState(false);
-  const [activeTab, setActiveTab] = useState("projects");
+  const [activeTab, setActiveTab] = useState("systems");
   const [selectedAuthItem, setSelectedAuthItem] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authSearchQuery, setAuthSearchQuery] = useState("");
@@ -554,6 +554,7 @@ export default function CompanyControlPanel({ theme, company: initialCompany }) 
           {/* Tabs */}
           <div className="flex flex-wrap bg-gray-100/80 dark:bg-[#12102A] p-1.5 rounded-2xl border border-transparent dark:border-[#2E2B5A] gap-1 self-start sm:self-center shadow-inner">
             {[
+              { id: "systems", label: "Systems", count: authData?.systems?.length || 0 },
               { id: "projects", label: "Projects", count: authData?.projects?.length || 0 },
               { id: "teams", label: "Teams", count: authData?.teams?.length || 0 },
               { id: "pages", label: "Pages/Sheets", count: authData?.pages?.length || 0 },
