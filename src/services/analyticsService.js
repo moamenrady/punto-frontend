@@ -38,8 +38,8 @@ export const analyticsService = {
   getShiftAnalytics:   (weekStart) => request(`/analytics/shift-analytics?weekStart=${weekStart}`).then(j => j?.data),
 
   // ── Sprint Analytics ──
-  getBurndown:            (sprintId)  => request(`/sprints/analytics/burndown/${sprintId}`).then(j => j?.data),
-  getVelocity:            (projectId) => request(`/sprints/analytics/velocity/${projectId}`).then(j => j?.data?.velocity ?? []),
-  getSprintStatusOverview:(projectId)  => request(`/sprints/analytics/status-overview${projectId ? `?projectId=${projectId}` : ''}`).then(j => j?.data?.overview ?? []),
-  getGlobalKPIs:          (projectId)  => request(`/sprints/analytics/global-kpis${projectId ? `?projectId=${projectId}` : ''}`).then(j => j?.data),
+  getBurndown:            (projectId, sprintId) => request(`/projects/${projectId}/sprints/analytics/burndown/${sprintId}`).then(j => j?.data),
+  getVelocity:            (projectId)           => request(`/projects/${projectId}/sprints/analytics/velocity/${projectId}`).then(j => j?.data?.velocity ?? []),
+  getSprintStatusOverview:(projectId)           => request(`/projects/${projectId}/sprints/analytics/status-overview`).then(j => j?.data?.overview ?? []),
+  getGlobalKPIs:          (projectId)           => request(`/projects/${projectId}/sprints/analytics/global-kpis`).then(j => j?.data),
 };
