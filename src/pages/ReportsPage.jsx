@@ -231,7 +231,10 @@ const CT = ({ active, payload, label, t }) => {
         <div key={i} style={{ display:'flex',alignItems:'center',gap:6,marginBottom:2 }}>
           <span style={{ width:7,height:7,borderRadius:'50%',background:p.color||p.fill,display:'inline-block',flexShrink:0 }}/>
           <span style={{ fontSize:11,color:t.muted }}>{p.name}:</span>
-          <span style={{ fontSize:12,fontWeight:700,color:t.text }}>{p.value}</span>
+          <span style={{ fontSize:12,fontWeight:700,color:t.text }}>
+            {p.value}{p.name === "Percentage" ? "%" : ""}
+            {p.payload?.count !== undefined ? ` (${p.payload.count} tickets)` : ""}
+          </span>
         </div>
       ))}
     </div>
@@ -318,7 +321,13 @@ function TabTickets({ t }) {
   })()
 
   const statusData = (kd?.statusDistribution||[]).map((s,i)=>({ name:s._id||'Unknown', value:s.count, fill:P[i%P.length] }))
-  const prioData   = (kd?.priorityDistribution||[]).map((p,i)=>({ name:p._id||'Unknown', value:p.count, fill:P[i%P.length] }))
+  const prioTotal  = (kd?.priorityBreakdown||[]).reduce((s, x) => s + x.count, 0) || 1
+  const prioData   = (kd?.priorityBreakdown||[]).map((p,i)=>({
+    name: p._id ? (p._id.charAt(0).toUpperCase() + p._id.slice(1)) : 'Unknown',
+    value: Math.round((p.count / prioTotal) * 100),
+    count: p.count,
+    fill: P[i%P.length]
+  }))
   const catData    = (cats.data||[]).map((c,i)=>({ name:c.category||c._id||'Other', value:c.count, fill:P[i%P.length] }))
   const resByPrio  = res.data?.breakdownByPriority||[]
   const slaRisk    = kd?.criticalTickets && total ? Math.round((kd.criticalTickets/total)*100) : null
@@ -357,12 +366,12 @@ function TabTickets({ t }) {
             <p style={{ fontSize:11,fontWeight:600,color:t.muted,margin:'0 0 10px' }}>Tickets by Priority</p>
             {kpis.isLoading ? <Spin t={t}/> : prioData.length===0 ? <MT t={t} icon="📂" title="No data"/> : (
               <ResponsiveContainer width="100%" height={190}>
-                <BarChart data={prioData} margin={{top:5,right:10,left:-20,bottom:0}}>
-                  <CartesianGrid stroke={t.grid} vertical={false}/>
-                  <XAxis dataKey="name" tick={{fill:t.axis,fontSize:10}} axisLine={false} tickLine={false}/>
-                  <YAxis tick={{fill:t.axis,fontSize:10}} axisLine={false} tickLine={false}/>
+                <BarChart data={prioData} layout="vertical" margin={{top:0,right:32,left:-20,bottom:0}}>
+                  <CartesianGrid stroke={t.grid} vertical={false} horizontal={false}/>
+                  <XAxis type="number" unit="%" tick={{fill:t.axis,fontSize:10}} axisLine={false} tickLine={false} domain={[0, 100]}/>
+                  <YAxis type="category" dataKey="name" tick={{fill:t.text,fontSize:11}} axisLine={false} tickLine={false} width={80}/>
                   <Tooltip content={<CT t={t}/>}/>
-                  <Bar dataKey="value" name="Tickets" radius={[5,5,0,0]} maxBarSize={34}>
+                  <Bar dataKey="value" name="Percentage" radius={[0,5,5,0]} maxBarSize={16}>
                     {prioData.map((d,i)=><Cell key={i} fill={d.fill}/>)}
                   </Bar>
                 </BarChart>
