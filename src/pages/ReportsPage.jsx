@@ -328,7 +328,7 @@ function TabTickets({ t }) {
 
       {kpis.isLoading ? <GC t={t}><Spin t={t}/></GC> : (
         <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(175px,1fr))',gap:14 }}>
-          <KPICard t={t} label="Open Tickets"    value={kd?.openTickets}    color="#F97316" trend={12}  sub="Awaiting action"/>
+          <KPICard t={t} label="Active Tickets"  value={kd?.activeTickets}    color="#F97316" trend={12}  sub="Awaiting action"/>
           <KPICard t={t} label="Critical"        value={kd?.criticalTickets} color="#EF4444" trend={-8}  sub="Needs immediate attention" badge="action"/>
           <KPICard t={t} label="Avg Resolution"  value={res.data?.overallAverageHours!=null?`${res.data.overallAverageHours}h`:'—'} color={t.primary} trend={-5} sub="Across all priorities"/>
           <KPICard t={t} label="SLA Breach Risk" value={slaRisk!=null?`${slaRisk}%`:'—'} color="#F59E0B" trend={3} sub="Predicted for next 7 days" badge="ai"/>
