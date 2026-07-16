@@ -4,6 +4,10 @@ import axios from 'axios';
 import AssignMemberModal from '../components/AssignMemberModal';
 import Avatar from '../components/Avatar';
 import HelpSolveModal from '../components/HelpSolveModal';
+import EditTicketModal from '../components/EditTicketModal';
+import StockUsageConfirmModal from '../components/StockUsageConfirmModal';
+import Toast, { useToast } from '../components/Toast';
+import { SystemAdmin } from '../services/aiOpsService';
 import './ticket-details.css';
 
 /* ── helpers ─────────────────────────────── */
@@ -115,7 +119,10 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
   const [solution, setSolution] = useState("");
   const [loading, setLoading] = useState(true);
   const [showHelpSolve, setShowHelpSolve] = useState(false);
+  const [showEditTicket, setShowEditTicket] = useState(false);
   const [resolveError, setResolveError] = useState("");
+  const [stockPrompt, setStockPrompt] = useState(null); // { taskName, items } | null
+  const { toasts, close: closeToast, success: toastSuccess, error: toastError, info: toastInfo } = useToast();
 
   const API_BASE = "https://punto-production-21ed.up.railway.app/api/v1/tickets";
 
@@ -192,6 +199,19 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
         setLocalTicket({ ...localTicket, status: 'resolved', resolution: solution });
         setShowResolveForm(false);
         setSolution("");
+
+        // "Automatic Stock Deduction" — best-effort check, never blocks resolving
+        // the ticket. Asks the AI whether anything from inventory was used
+        // while working this ticket; if so, prompt the tech to confirm the
+        // deduction (which then goes straight to the Node.js stock backend).
+        if (user?.company_id) {
+          SystemAdmin.extractStockUsage({ taskId: localTicket._id, companyId: user.company_id })
+            .then((result) => {
+              const usedItems = result?.used_items ?? [];
+              if (usedItems.length > 0) setStockPrompt({ taskName: localTicket.name, items: usedItems });
+            })
+            .catch((err) => console.warn('Stock usage check skipped:', err.message));
+        }
       } else {
         setResolveError(data?.message || "Failed to resolve ticket. Please try again.");
       }
@@ -217,6 +237,9 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
   const createdBy = localTicket.created_by || {};
   const assignTo = localTicket.assign_to || null;
   const isAssignedToMe = assignTo?._id?.toString() === user?._id?.toString();
+  const isCreator = createdBy?._id?.toString() === user?._id?.toString();
+  const isLockedStatus = ['resolved', 'closed'].includes(localTicket.status?.toLowerCase());
+  const canEditTicket = (isCreator || isITUser) && !isLockedStatus;
 
   return (
     <div className="td-bg">
@@ -232,6 +255,20 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
+          {canEditTicket && (
+            <button
+              className="td-assign-btn"
+              style={{ backgroundColor: '#F5F3FF', borderColor: '#DDD6FE', color: '#6D28D9' }}
+              onClick={() => setShowEditTicket(true)}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit Ticket
+            </button>
+          )}
+
           <button
             className="td-assign-btn"
             style={{ backgroundColor: '#EEF1FD', borderColor: '#C7D2F8', color: '#534AB7' }}
@@ -365,6 +402,36 @@ export default function TicketDetailsPage({ tickets = [], isITUser, user }) {
         itemType="ticket"
         itemLabel={localTicket.name}
       />
+
+      <EditTicketModal
+        ticket={localTicket}
+        isOpen={showEditTicket}
+        onClose={() => setShowEditTicket(false)}
+        onSaved={(updated) => {
+          setLocalTicket(updated);
+          toastSuccess('Ticket Updated', 'Your changes have been saved.');
+        }}
+      />
+
+      <StockUsageConfirmModal
+        isOpen={!!stockPrompt}
+        onClose={() => setStockPrompt(null)}
+        taskName={stockPrompt?.taskName}
+        items={stockPrompt?.items ?? []}
+        onDone={(result) => {
+          if (result.deducted.length > 0) {
+            toastSuccess('Stock Updated', `Deducted: ${result.deducted.map((d) => `${d.item_name} (${d.quantity})`).join(', ')}.`);
+          }
+          if (result.notFound.length > 0) {
+            toastInfo('Some Items Not Found', `Couldn't match in stock: ${result.notFound.map((d) => d.item_name).join(', ')}.`);
+          }
+          if (result.failed.length > 0) {
+            toastError('Deduction Failed', `Couldn't update: ${result.failed.map((d) => d.item_name).join(', ')}.`);
+          }
+        }}
+      />
+
+      <Toast toasts={toasts} onClose={closeToast} />
     </div>
   );
 }

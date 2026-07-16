@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import HelpSolveModal from './HelpSolveModal';
 
 const statusBadgeStyle = {
   'In Stock':     { background: '#D1FAE5', color: '#065F46' },
@@ -7,9 +8,12 @@ const statusBadgeStyle = {
 };
 
 const ViewAssetModal = ({ asset, onClose }) => {
+  const [showHelpSolve, setShowHelpSolve] = useState(false);
+
   if (!asset) return null;
 
   const status = asset.status ?? 'In Stock';
+  const needsHelp = status === 'Low Stock' || status === 'Out of Stock';
   const initials = asset.name
     .split(' ')
     .map((part) => part[0])
@@ -92,13 +96,32 @@ const ViewAssetModal = ({ asset, onClose }) => {
                 </div>
               </div>
 
-              <button className="ds-btn ds-btn-secondary" style={{ marginTop: 16, justifyContent: 'center' }} onClick={onClose}>
-                Close
-              </button>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                {needsHelp && (
+                  <button
+                    className="ds-btn ds-btn-secondary"
+                    style={{ flex: 1, justifyContent: 'center', color: '#534AB7', borderColor: '#C7D2F8', background: '#EEF1FD' }}
+                    onClick={() => setShowHelpSolve(true)}
+                  >
+                    🧠 Help me solve
+                  </button>
+                )}
+                <button className="ds-btn ds-btn-secondary" style={{ flex: 1, justifyContent: 'center' }} onClick={onClose}>
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <HelpSolveModal
+        isOpen={showHelpSolve}
+        onClose={() => setShowHelpSolve(false)}
+        itemId={asset.id}
+        itemType="stock"
+        itemLabel={asset.name}
+      />
     </div>
   );
 };

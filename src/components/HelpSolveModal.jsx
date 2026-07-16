@@ -11,8 +11,8 @@ import Markdown from "../utils/markdown";
  *
  * Props:
  *  - isOpen, onClose
- *  - itemId    – task or ticket id
- *  - itemType  – 'task' | 'ticket'
+ *  - itemId    – task, ticket, or stock item id
+ *  - itemType  – 'task' | 'ticket' | 'stock'
  *  - itemLabel – display name shown in the header (optional)
  */
 const HelpSolveModal = ({ isOpen, onClose, itemId, itemType, itemLabel }) => {

@@ -37,6 +37,7 @@ function MainApp({ themeObj, theme, setTheme, isDarkMode, setIsDarkMode, user, s
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [company, setCompany] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const isAdmin =
     user?.role === "admin" ||
     user?.role === "manager" ||
@@ -101,6 +102,8 @@ function MainApp({ themeObj, theme, setTheme, isDarkMode, setIsDarkMode, user, s
           theme={isDarkMode ? "dark" : "light"}
           setTheme={(val) => setIsDarkMode(val === "dark")}
           themeObj={themeObj}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
         <div className="p-4 flex-1 overflow-auto">
           <Routes>
@@ -116,6 +119,7 @@ function MainApp({ themeObj, theme, setTheme, isDarkMode, setIsDarkMode, user, s
                   onRefresh={refreshTicketList}
                   theme={themeObj}
                   isLoading={isLoading}
+                  searchQuery={searchQuery}
                 />
               }
             />
@@ -153,7 +157,7 @@ function MainApp({ themeObj, theme, setTheme, isDarkMode, setIsDarkMode, user, s
               }
             />
             <Route path="/reports" element={<ReportsPage theme={themeObj} user={user} isDarkMode={isDarkMode} />} />
-            <Route path="/settings" element={<Settings refreshUser={(updated) => setUser({ ...user, ...updated })} isDarkMode={isDarkMode} />} />
+            <Route path="/settings" element={<Settings refreshUser={(updated) => setUser({ ...user, ...updated })} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />} />
             <Route path="/" element={<Navigate to={isManager ? "/control-panel" : "/tickets"} replace />} />
           </Routes>
         </div>
@@ -190,7 +194,7 @@ function AppContent() {
     () => localStorage.getItem('theme') || 'light'
   );
 
-  // Sync isDarkMode → document root class + localStorage on every change
+  // Sync isDarkMode -> document root class + localStorage on every change
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
