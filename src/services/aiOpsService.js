@@ -308,14 +308,16 @@ export const TicketManagement = {
    * @param {string} params.description
    * @param {string} params.priority
    * @param {string} params.createdById
+   * @param {string} params.companyId
    */
-  createTicket: async ({ title, description, priority, createdById }) => {
+  createTicket: async ({ title, description, priority, createdById, companyId }) => {
     try {
       const { data } = await aiClient.post("/api/tickets/create", {
         title,
         description,
         priority,
         created_by_id: createdById,
+        company_id: companyId, // ✅ مضاف — required by TicketCreateRequest on the backend
       });
       return data;
     } catch (err) {
