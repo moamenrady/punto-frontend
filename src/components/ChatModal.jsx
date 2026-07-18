@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import io from 'socket.io-client';
+import { io } from 'socket.io-client';
 import axios from 'axios';
 import { Send, MoreVertical, Phone, Video, Paperclip, Smile, X, Check, Mic, Search, MessageSquare } from 'lucide-react';
 import Avatar from './Avatar';
