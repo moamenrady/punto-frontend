@@ -100,29 +100,6 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
       return;
     }
 
-    // Check if user already has a company workspace (fixes redirect loop)
-    axios.get("https://punto-production-21ed.up.railway.app/api/v1/users/me", {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => {
-      if (res.data.status === "success" && res.data.data.user.company_id) {
-        const freshUser = res.data.data.user;
-        setUser({
-          _id: freshUser._id,
-          name: freshUser.name ?? "",
-          email: freshUser.email ?? "",
-          role: freshUser.role ?? "",
-          company_id: freshUser.company_id,
-          phone: freshUser.phone ?? "+20 100 000 0000",
-          dept: freshUser.dept ?? "IT Department",
-          location: freshUser.location ?? "",
-          isOnline: true,
-          avatar: freshUser.photo ?? null,
-        });
-        navigate(freshUser.role === "manager" || freshUser.role === "admin" ? "/control-panel" : "/tickets");
-      }
-    }).catch(err => console.error("Error verifying profile on setup:", err));
-
-
     if (isManager) {
       setLoadingPlans(true);
       axios
@@ -474,79 +451,15 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
               You are not associated with any company workspace yet. Please ask your administrator to add you to their company organization to access the dashboard.
             </p>
 
-            <div className="w-full text-left mb-6">
-              <div className="relative w-full mb-4">
-                <Search className={`absolute left-3.5 top-3.5 ${theme.textM}`} size={18} />
-                <input
-                  type="text"
-                  placeholder="Search company workspace to join..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl border outline-none text-[13px] ${theme.input} ${theme.textP} ${theme.border} focus:ring-1 focus:ring-[#7F6FF5]`}
-                />
-              </div>
-
-              {listLoading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="animate-spin text-[#7F6FF5]" size={24} />
-                </div>
-              ) : filteredCompanies.length > 0 ? (
-                <div className={`max-h-[200px] overflow-y-auto w-full rounded-xl border ${theme.border} divide-y dark:divide-[#2E2B5A] custom-scrollbar`}>
-                  {filteredCompanies.map((c) => {
-                    const isSelected = selectedCompany?._id === c._id;
-                    return (
-                      <div
-                        key={c._id}
-                        onClick={() => setSelectedCompany(c)}
-                        className={`p-3 text-left cursor-pointer transition-all flex items-center justify-between ${
-                          isSelected
-                            ? isDarkMode ? "bg-[#3ECFAA]/5 text-[#3ECFAA]" : "bg-[#7F6FF5]/5 text-[#7F6FF5]"
-                            : `hover:bg-gray-50 dark:hover:bg-[#1E1B3A]/30 ${theme.textP}`
-                        }`}
-                      >
-                        <div>
-                          <p className="text-[13px] font-bold">{c.name}</p>
-                          <p className={`text-[10px] ${theme.textM}`}>{c.industry} · {c.website || "No website"}</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                          isSelected ? "bg-[#7F6FF5] border-transparent text-white" : "border-gray-300"
-                        }`}>
-                          {isSelected && <Check size={12} />}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : searchQuery ? (
-                <p className={`text-xs my-4 text-center ${theme.textM}`}>No companies match your search.</p>
-              ) : null}
-
-              {selectedCompany && (
-                <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleJoinCompany}
-                  disabled={joinLoading}
-                  className={`w-full mt-4 py-3.5 rounded-xl text-white font-bold text-[14px] bg-[#3ECFAA] hover:bg-[#3ecfaa]/90 shadow-lg flex items-center justify-center gap-2`}
-                >
-                  {joinLoading ? <Loader2 className="animate-spin" size={18} /> : <UserPlus size={18} />}
-                  Join {selectedCompany.name}
-                </motion.button>
-              )}
-              {joinError && <p className="text-red-500 text-center text-xs mt-3">{joinError}</p>}
-            </div>
-
             <div className="w-full space-y-3">
-              {!selectedCompany && (
-                <motion.button
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setForceShowWizard(true)}
-                  className={`w-full py-3.5 rounded-xl text-[#7F6FF5] font-bold text-[14px] bg-[#7F6FF5]/10 hover:bg-[#7F6FF5]/20 flex items-center justify-center gap-2 transition-colors`}
-                >
-                  Create a New Company
-                </motion.button>
-              )}
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setForceShowWizard(true)}
+                className={`w-full py-3.5 rounded-xl text-white font-bold text-[14px] bg-gradient-to-r ${theme.btn} shadow-lg flex items-center justify-center gap-2`}
+              >
+                Create a New Company
+              </motion.button>
 
               <div className="grid grid-cols-2 gap-3">
                 <motion.button
