@@ -100,6 +100,11 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
       return;
     }
 
+    if (user?.company_id) {
+      navigate(user.role === "manager" || user.role === "admin" ? "/control-panel" : "/tickets");
+      return;
+    }
+
     if (isManager) {
       setLoadingPlans(true);
       axios
@@ -447,9 +452,101 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
               Not in a Company Yet
             </h1>
             
-            <p className={`text-sm mb-8 leading-relaxed px-2 ${theme.textM}`}>
-              You are not associated with any company workspace yet. Please ask your administrator to add you to their company organization to access the dashboard.
+            <p className={`text-sm mb-6 leading-relaxed px-2 ${theme.textM}`}>
+              You are not associated with any company workspace yet. Please join an existing company below or ask your administrator to add you.
             </p>
+
+            {/* Company Search & Selection Panel */}
+            <div className="w-full mt-2 mb-6 text-left">
+              <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${theme.textM}`}>
+                Join an Existing Company
+              </p>
+              
+              <div className="relative w-full">
+                <Search className={`absolute left-3.5 top-3.5 ${theme.textM}`} size={16} />
+                <input
+                  type="text"
+                  placeholder="Search by company name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl border outline-none text-[13px] transition-all ${theme.input} ${theme.textP} ${theme.border} focus:ring-1 focus:ring-[#7F6FF5]`}
+                />
+              </div>
+
+              {/* Company List Box */}
+              <div className="mt-3">
+                {listLoading ? (
+                  <div className="flex flex-col items-center py-6">
+                    <Loader2 className="animate-spin text-[#7F6FF5] mb-2" size={24} />
+                    <p className={`text-[11px] ${theme.textM}`}>Loading companies...</p>
+                  </div>
+                ) : filteredCompanies.length > 0 ? (
+                  <div className={`max-h-[160px] overflow-y-auto rounded-xl border ${theme.border} ${theme.input} divide-y dark:divide-[#2E2B5A]`}>
+                    {filteredCompanies.map((c) => {
+                      const isSelected = selectedCompany?._id === c._id;
+                      return (
+                        <div
+                          key={c._id}
+                          onClick={() => setSelectedCompany(c)}
+                          className={`p-3 cursor-pointer transition-all flex items-center justify-between text-left ${
+                            isSelected
+                              ? isDarkMode ? "bg-[#3ECFAA]/10 text-[#3ECFAA]" : "bg-[#7F6FF5]/5 text-[#7F6FF5]"
+                              : `hover:bg-gray-50/50 dark:hover:bg-[#2E2B5A]/20 ${theme.textP}`
+                          }`}
+                        >
+                          <div>
+                            <p className="text-[13px] font-bold">{c.name}</p>
+                            <p className={`text-[10px] ${theme.textM}`}>{c.industry} {c.website ? `· ${c.website}` : ""}</p>
+                          </div>
+                          <div
+                            className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                              isSelected
+                                ? "bg-[#7F6FF5] border-transparent text-white"
+                                : isDarkMode ? "border-[#2E2B5A]" : "border-gray-300"
+                            }`}
+                          >
+                            {isSelected && <Check size={10} />}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className={`p-4 rounded-xl border border-dashed text-center ${theme.border}`}>
+                    <p className={`text-xs ${theme.textM}`}>
+                      {searchQuery ? "No companies match your search." : "No companies registered in the platform yet."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Error & Join Actions */}
+            {joinError && (
+              <p className="text-red-500 text-xs font-semibold mb-4 text-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg w-full border border-red-200 dark:border-red-500/20">
+                {joinError}
+              </p>
+            )}
+
+            {selectedCompany && (
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleJoinCompany}
+                disabled={joinLoading}
+                className={`w-full mb-4 py-3 rounded-xl text-white font-bold text-[13px] bg-gradient-to-r ${theme.btn} shadow-lg flex items-center justify-center gap-2 disabled:opacity-50`}
+              >
+                {joinLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} /> Joining Workspace...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={16} /> Join {selectedCompany.name}
+                  </>
+                )}
+              </motion.button>
+            )}
 
             <div className="w-full space-y-3">
               <motion.button
