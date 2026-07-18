@@ -5,7 +5,7 @@ import { Search, MoreVertical, MessageSquare } from 'lucide-react';
 import Avatar from '../components/Avatar';
 
 const GroupChatPage = ({ user, theme, onProfileClick }) => {
-    const [myTeam, setMyTeam] = useState(null);
+    const [myTeams, setMyTeams] = useState([]); // List of teams user is in
     const [activeChat, setActiveChat] = useState(null); // { type: 'team' | 'dm' | 'ai', data: any, id: string }
     const [activeDMs, setActiveDMs] = useState([]); // List of users
     const [loading, setLoading] = useState(true);
@@ -39,15 +39,26 @@ const GroupChatPage = ({ user, theme, onProfileClick }) => {
                 const token = localStorage.getItem("token");
                 const headers = { 'Authorization': `Bearer ${token}` };
                 
-                // Fetch Team
+                // Fetch Teams (Get all teams and filter for current user's membership)
                 try {
-                    const teamRes = await axios.get(`https://punto-production-21ed.up.railway.app/api/v1/teams/user/${user._id}`, { headers });
-                    setMyTeam(teamRes.data);
+                    const teamsRes = await axios.get(`https://punto-production-21ed.up.railway.app/api/v1/teams`, { headers });
+                    const allTeams = teamsRes.data.data?.data || [];
+                    const userTeams = allTeams.filter(t => 
+                        t.members?.some(m => (m.user?._id || m.user) === user._id)
+                    );
+                    setMyTeams(userTeams);
                 } catch (err) {
-                    if (err.response?.status === 404) {
-                        setMyTeam(null);
-                    } else {
-                        console.error("Error fetching team data:", err.message);
+                    console.error("Error fetching all teams, trying fallback user endpoint:", err.message);
+                    try {
+                        const teamRes = await axios.get(`https://punto-production-21ed.up.railway.app/api/v1/teams/user/${user._id}`, { headers });
+                        if (teamRes.data) {
+                            setMyTeams([teamRes.data]);
+                        } else {
+                            setMyTeams([]);
+                        }
+                    } catch (fallbackErr) {
+                        console.error("Fallback team fetch failed:", fallbackErr.message);
+                        setMyTeams([]);
                     }
                 }
 
@@ -68,11 +79,6 @@ const GroupChatPage = ({ user, theme, onProfileClick }) => {
             fetchMyTeamAndDMs();
         }
     }, [user._id]);
-
-    const handleOpenTeam = () => {
-        if (!myTeam) return;
-        setActiveChat({ type: 'team', data: myTeam, id: myTeam._id });
-    };
 
     const handleStartDM = (member) => {
         if (member._id === user._id) return;
@@ -145,24 +151,25 @@ const GroupChatPage = ({ user, theme, onProfileClick }) => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
-                        {/* Team Chat Item */}
-                        {myTeam && (
+                        {/* Team Chat Items */}
+                        {myTeams.map(team => (
                             <div 
-                                onClick={handleOpenTeam}
-                                className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${waLayout.hover} ${activeChat?.id === myTeam._id ? waLayout.sidebarHeader : ''}`}
+                                key={team._id}
+                                onClick={() => setActiveChat({ type: 'team', data: team, id: team._id })}
+                                className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${waLayout.hover} ${activeChat?.id === team._id ? waLayout.sidebarHeader : ''}`}
                             >
                                 <div className="w-[48px] h-[48px] rounded-full overflow-hidden shrink-0 ml-1">
-                                    <Avatar name={`Team+${myTeam._id.substring(0,2)}`} size={48} className="w-full h-full" />
+                                    <Avatar name={`Team+${team._id.substring(0,2)}`} size={48} className="w-full h-full" />
                                 </div>
                                 <div className={`flex-1 border-b pb-3 pt-2 ${waLayout.border}`}>
                                     <div className="flex justify-between items-center mb-0.5">
-                                        <h3 className={`font-normal text-[17px] ${waLayout.textMain} truncate`}>{myTeam.name}</h3>
+                                        <h3 className={`font-normal text-[17px] ${waLayout.textMain} truncate`}>{team.name}</h3>
                                         <span className={`text-[12px] ${waLayout.textSec}`}>Group</span>
                                     </div>
-                                    <p className={`text-[14px] ${waLayout.textSec} truncate`}>{myTeam.description || 'Welcome to the team chat!'}</p>
+                                    <p className={`text-[14px] ${waLayout.textSec} truncate`}>{team.description || 'Welcome to the team chat!'}</p>
                                 </div>
                             </div>
-                        )}
+                        ))}
                         
                         {/* Active DMs Items */}
                         {activeDMs.map(dm => (
@@ -184,7 +191,7 @@ const GroupChatPage = ({ user, theme, onProfileClick }) => {
                             </div>
                         ))}
 
-                        {!myTeam && activeDMs.length === 0 && (
+                        {myTeams.length === 0 && activeDMs.length === 0 && (
                             <div className={`p-8 text-center ${waLayout.textSec}`}>
                                 No active chats.
                             </div>

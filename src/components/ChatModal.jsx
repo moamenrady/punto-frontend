@@ -12,6 +12,14 @@ const ChatModal = ({ chatType, chatId, team, contact, user, theme, onClose, onSt
     const [text, setText] = useState("");
     const [showInfo, setShowInfo] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+
+    useEffect(() => {
+        if (chatType === 'team') {
+            setShowInfo(true);
+        } else {
+            setShowInfo(false);
+        }
+    }, [chatType, chatId]);
     const scrollRef = useRef();
 
     const isDark = theme.bg.includes('12102A') || theme.bg.includes('dark');
@@ -62,6 +70,7 @@ const ChatModal = ({ chatType, chatId, team, contact, user, theme, onClose, onSt
              .catch(err => console.error("Error fetching messages:", err));
 
         const handleReceive = (msg) => {
+            if (msg.chatId !== chatId) return;
             setMessages(prev => {
                 if(prev.find(m => m._id === msg._id)) return prev;
                 return [...prev, msg];
@@ -367,20 +376,21 @@ const ChatModal = ({ chatType, chatId, team, contact, user, theme, onClose, onSt
                                 </div>
                                 <div className="flex flex-col">
                                     {team?.members?.map((member, idx) => {
-                                        const isMe = member._id === user._id;
+                                        const u = member.user || member;
+                                        const isMe = u?._id === user._id;
                                         return (
                                             <div 
                                                 key={idx} 
-                                                onClick={() => !isMe && onStartDM && onStartDM(member)}
+                                                onClick={() => !isMe && onStartDM && onStartDM(u)}
                                                 className={`flex items-center gap-4 px-6 py-2.5 ${isMe ? '' : waTheme.hover + ' cursor-pointer'} transition-colors`}
                                             >
                                                 <div className="w-[40px] h-[40px] rounded-full overflow-hidden shrink-0">
-                                                    <Avatar photo={member.photo} name={member.name} size={40} className="w-full h-full" />
+                                                    <Avatar photo={u?.photo} name={u?.name} size={40} className="w-full h-full" />
                                                 </div>
                                                 <div className={`flex-1 border-b ${waTheme.border} pb-3 pt-1 flex flex-col justify-center h-full`}>
                                                     <div className="flex justify-between items-center">
                                                         <span className={`text-[16px] ${isMe ? 'font-medium' : ''} ${waTheme.headerText}`}>
-                                                            {isMe ? 'You' : member.name}
+                                                            {isMe ? 'You' : u?.name}
                                                         </span>
                                                         {member.role === 'admin' && (
                                                             <span className={`text-[12px] px-2 py-0.5 rounded border ${isDark ? 'border-[#00a884] text-[#00a884]' : 'border-[#008069] text-[#008069]'}`}>
@@ -389,7 +399,7 @@ const ChatModal = ({ chatType, chatId, team, contact, user, theme, onClose, onSt
                                                         )}
                                                     </div>
                                                     <span className={`text-[13px] ${isDark ? 'text-[#8696a0]' : 'text-[#667781]'}`}>
-                                                        {member.email}
+                                                        {u?.email}
                                                     </span>
                                                 </div>
                                             </div>
