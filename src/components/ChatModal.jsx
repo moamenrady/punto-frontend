@@ -181,7 +181,10 @@ const ChatModal = ({ chatType, chatId, team, contact, user, theme, onClose, onSt
     const chatSubTitle = chatType === 'ai' 
         ? 'Active • OmniSuite Assistant'
         : (chatType === 'team' 
-            ? (team?.members?.map(m => m.name.split(' ')[0]).join(', ') || 'tap here for team info') 
+            ? (team?.members?.map(m => {
+                const u = m.user || m;
+                return u?.name?.split(' ')[0] || '';
+              }).filter(Boolean).join(', ') || 'tap here for team info') 
             : (contact?.email || 'tap here for contact info'));
     
     return (
