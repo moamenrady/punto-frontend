@@ -5,7 +5,7 @@ import { Sun, Moon, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { DarkLogo, LightLogo } from "../components/logo";
 import axios from "axios";
 
-export default function UserRegister({ isDarkMode, setIsDarkMode, theme }) {
+export default function UserRegister({ isDarkMode, setIsDarkMode, theme, setUser }) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -55,6 +55,36 @@ export default function UserRegister({ isDarkMode, setIsDarkMode, theme }) {
       );
 
       if (response.data.status === "success") {
+        // Auto-login the user immediately
+        try {
+          const loginRes = await axios.post(
+            "https://punto-production-21ed.up.railway.app/api/v1/users/login",
+            {
+              email: formData.email.trim(),
+              password: formData.password,
+            }
+          );
+
+          if (loginRes.data.status === "success") {
+            localStorage.setItem("token", loginRes.data.token);
+            const userData = loginRes.data.data.user;
+            setUser({
+              _id: userData._id,
+              name: userData.name ?? "",
+              email: userData.email ?? "",
+              role: userData.role ?? "",
+              company_id: userData.company_id ?? null,
+              phone: userData.phone ?? "+20 100 000 0000",
+              dept: userData.dept ?? "IT Department",
+              location: userData.location ?? "",
+              isOnline: true,
+              avatar: userData.photo ?? null,
+            });
+          }
+        } catch (loginErr) {
+          console.error("Auto-login failed after signup:", loginErr);
+        }
+
         setSuccessMessage("Your account has been created! A verification email has been sent. Please check your inbox.");
         setTimeout(() => {
           navigate("/verification-sent");

@@ -11,8 +11,6 @@ export default function VerificationSent({ isDarkMode, theme, user }) {
     if (user) {
       if (user.company_id) {
         navigate(user.role === "manager" || user.role === "admin" ? "/control-panel" : "/tickets");
-      } else {
-        navigate("/setup");
       }
     }
   }, [user, navigate]);
@@ -54,7 +52,13 @@ export default function VerificationSent({ isDarkMode, theme, user }) {
 
           <div className="space-y-4">
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => {
+                if (user) {
+                  navigate("/setup");
+                } else {
+                  navigate("/login");
+                }
+              }}
               className={`w-full py-4 rounded-xl text-white font-bold text-[15px] bg-gradient-to-r ${theme.btn} shadow-lg hover:scale-[1.02] transition-transform`}
             >
               I've verified my email

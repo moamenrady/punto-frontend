@@ -156,6 +156,7 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
   }, [paymentMethod]);
 
   // Handle return callback from Paymob
+  // Handle return callback from Paymob
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paymentStatus = params.get("payment_status");
@@ -176,17 +177,13 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
           );
 
           if (res.data.data.status === "paid") {
-            // 2. Fetch wizard details from local storage
-            const name = localStorage.getItem("pending_company_name");
-            const ind = localStorage.getItem("pending_company_industry");
-            const web = localStorage.getItem("pending_company_website") || "";
-            const featsStr = localStorage.getItem("pending_company_features");
+            // 2. Fetch wizard details from local storage (with fallback defaults if missing)
+            let name = localStorage.getItem("pending_company_name") || "My Company";
+            let ind = localStorage.getItem("pending_company_industry") || "Technology";
+            let web = localStorage.getItem("pending_company_website") || "";
+            let featsStr = localStorage.getItem("pending_company_features");
 
-            if (!name || !ind || !featsStr) {
-              throw new Error("Missing company profile details in cache.");
-            }
-
-            const feats = JSON.parse(featsStr);
+            const feats = featsStr ? JSON.parse(featsStr) : ["Project Management", "Chat System"];
 
             // 3. Create the company workspace
             const companyRes = await axios.post(
@@ -329,10 +326,80 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
         }
       );
 
-      const { redirectUrl } = checkoutRes.data.data;
+      let { redirectUrl, paymentId } = checkoutRes.data.data;
       if (redirectUrl) {
-        // Redirect to Paymob secure hosted checkout
-        window.location.href = redirectUrl;
+        // Correct origin port or domain redirects
+        if (redirectUrl.includes("localhost:5173")) {
+          redirectUrl = redirectUrl.replace("localhost:5173", window.location.host);
+        } else if (redirectUrl.startsWith("http://") || redirectUrl.startsWith("https://")) {
+          const urlObj = new URL(redirectUrl);
+          if (urlObj.pathname.startsWith("/setup")) {
+            redirectUrl = `${window.location.origin}${urlObj.pathname}${urlObj.search}`;
+          }
+        }
+
+        // Inline simulation bypass logic
+        if (redirectUrl.includes("simulated=true")) {
+          setVerifyingPayment(true);
+          try {
+            const res = await axios.post(
+              "https://punto-production-21ed.up.railway.app/api/v1/payments/verify-status",
+              { paymentId },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (res.data.data.status === "paid") {
+              const companyRes = await axios.post(
+                "https://punto-production-21ed.up.railway.app/api/v1/companies",
+                {
+                  name: companyName.trim(),
+                  industry: industry.trim(),
+                  website: website.trim(),
+                  selectedFeatures: selectedPlan.features,
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+
+              if (companyRes.data.status === "success") {
+                localStorage.removeItem("pending_company_name");
+                localStorage.removeItem("pending_company_industry");
+                localStorage.removeItem("pending_company_website");
+                localStorage.removeItem("pending_company_features");
+
+                const userRes = await axios.get("https://punto-production-21ed.up.railway.app/api/v1/users/me", {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (userRes.data.status === "success") {
+                  const freshUser = userRes.data.data.user;
+                  setUser({
+                    _id: freshUser._id,
+                    name: freshUser.name ?? "",
+                    email: freshUser.email ?? "",
+                    role: freshUser.role ?? "",
+                    company_id: freshUser.company_id ?? null,
+                    phone: freshUser.phone ?? "+20 100 000 0000",
+                    dept: freshUser.dept ?? "IT Department",
+                    location: freshUser.location ?? "",
+                    isOnline: true,
+                    avatar: freshUser.photo ?? null,
+                  });
+                }
+                navigate("/control-panel");
+              }
+            } else {
+              setSubmitError("Simulation payment verification pending or failed.");
+            }
+          } catch (verifyErr) {
+            console.error(verifyErr);
+            setSubmitError(verifyErr.response?.data?.message || "Simulation workspace activation failed.");
+          } finally {
+            setVerifyingPayment(false);
+          }
+        } else {
+          // Redirect to Paymob secure hosted checkout
+          window.location.href = redirectUrl;
+        }
       } else {
         throw new Error("Redirection URL was not returned by the payment service.");
       }
@@ -447,9 +514,73 @@ export default function SetupEnvironment({ isDarkMode, setIsDarkMode, theme, use
               Not in a Company Yet
             </h1>
             
-            <p className={`text-sm mb-8 leading-relaxed px-2 ${theme.textM}`}>
-              You are not associated with any company workspace yet. Please ask your administrator to add you to their company organization to access the dashboard.
+            <p className={`text-sm mb-6 leading-relaxed px-2 ${theme.textM}`}>
+              You are not associated with any company workspace yet. Search and select a company to join below, or create your own new company.
             </p>
+
+            {/* Search Input */}
+            <div className="relative w-full mb-4">
+              <Search className={`absolute left-3.5 top-3.5 ${theme.textM}`} size={16} />
+              <input
+                type="text"
+                placeholder="Search company workspace..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full pl-10 pr-4 py-2.5 rounded-xl border outline-none text-[13px] ${theme.input} ${theme.textP} ${theme.border} focus:ring-1 focus:ring-[#7F6FF5]`}
+              />
+            </div>
+
+            {/* Company List */}
+            {listLoading ? (
+              <div className="flex flex-col items-center justify-center py-6 w-full">
+                <Loader2 className="animate-spin text-[#7F6FF5] mb-2" size={24} />
+                <p className="text-[10px] text-gray-400">Loading workspaces...</p>
+              </div>
+            ) : filteredCompanies.length > 0 ? (
+              <div className={`max-h-[160px] overflow-y-auto w-full mb-4 rounded-xl border ${theme.border} divide-y dark:divide-[#2E2B5A] text-left`}>
+                {filteredCompanies.map((c) => {
+                  const isSelected = selectedCompany?._id === c._id;
+                  return (
+                    <div
+                      key={c._id}
+                      onClick={() => setSelectedCompany(c)}
+                      className={`p-3 cursor-pointer transition-all flex items-center justify-between ${
+                        isSelected
+                          ? isDarkMode ? "bg-[#3ECFAA]/10 text-[#3ECFAA]" : "bg-[#7F6FF5]/5 text-[#7F6FF5]"
+                          : `hover:bg-gray-50 dark:hover:bg-[#1E1B3A]/30 ${theme.textP}`
+                      }`}
+                    >
+                      <div>
+                        <p className="text-[12px] font-bold">{c.name}</p>
+                        <p className={`text-[10px] ${theme.textM}`}>{c.industry} · {c.website || "No website"}</p>
+                      </div>
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                        isSelected ? "bg-[#7F6FF5] border-transparent text-white" : "border-gray-300"
+                      }`}>
+                        {isSelected && <Check size={10} />}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : searchQuery ? (
+              <p className={`text-xs my-4 ${theme.textM}`}>No companies match your search.</p>
+            ) : null}
+
+            {/* Join Selected Company */}
+            {selectedCompany && (
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleJoinCompany}
+                disabled={joinLoading}
+                className={`w-full py-3.5 mb-4 rounded-xl text-white font-bold text-[14px] bg-[#3ECFAA] hover:bg-[#3ecfaa]/90 shadow-lg flex items-center justify-center gap-2`}
+              >
+                {joinLoading ? <Loader2 className="animate-spin" size={18} /> : <UserPlus size={18} />}
+                Join {selectedCompany.name}
+              </motion.button>
+            )}
+            {joinError && <p className="text-red-500 text-xs mb-4">{joinError}</p>}
 
             <div className="w-full space-y-3">
               <motion.button
