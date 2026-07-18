@@ -37,54 +37,6 @@ const DARK_C = {
   footerBg: "#0f1117",
 };
 
-function Toggle({ value, onChange, loading, defaultOn = false }) {
-  const [on, setOn] = useState(value ?? defaultOn);
-
-  // sync لو الـ value اتغير من برا
-  useEffect(() => {
-    if (value !== undefined) setOn(value);
-  }, [value]);
-
-  return (
-    <button
-      onClick={() => {
-        if (loading) return;
-        const next = !on;
-        setOn(next);
-        onChange?.(next);
-      }}
-      disabled={loading}
-      style={{
-        position: "relative",
-        display: "inline-flex",
-        alignItems: "center",
-        width: 44,
-        height: 24,
-        borderRadius: 12,
-        border: "none",
-        cursor: loading ? "not-allowed" : "pointer",
-        backgroundColor: on ? C.primary : "#D1D5DB",
-        opacity: loading ? 0.6 : 1,
-        transition: "background-color .2s",
-        flexShrink: 0,
-      }}
-    >
-      <span
-        style={{
-          display: "inline-block",
-          width: 16,
-          height: 16,
-          borderRadius: "50%",
-          backgroundColor: "#fff",
-          boxShadow: "0 1px 3px rgba(0,0,0,.2)",
-          transform: on ? "translateX(24px)" : "translateX(4px)",
-          transition: "transform .2s",
-        }}
-      />
-    </button>
-  );
-}
-
 function Badge({ type, children }) {
   const map = {
     green: { bg: "#F0FDF4", color: "#16A34A", border: "#BBF7D0" },
@@ -717,131 +669,6 @@ function PageAccount() {
   );
 }
 
-function PageNotifications() {
-  const [settings, setSettings] = useState(null);
-  const [savingKey, setSavingKey] = useState(null);
-  const [toast, setToast] = useState(null);
-
-  function showToast(msg, type) {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  }
-
-  useEffect(() => {
-    fetch(`${API}/users/me/notifications`, {
-      headers: { Authorization: `Bearer ${token()}` },
-    })
-      .then((r) => r.json())
-      .then((d) => setSettings(d.data.doc))
-      .catch(() => showToast("Failed to load", "error"));
-  }, []);
-
-  async function handleToggle(key, newValue) {
-    // Optimistic update
-    setSettings((prev) => ({ ...prev, [key]: newValue }));
-    setSavingKey(key);
-    try {
-      const res = await fetch(`${API}/users/me/notifications`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token()}`,
-        },
-        body: JSON.stringify({ [key]: newValue }),
-      });
-      if (!res.ok) throw new Error();
-      showToast("✓ Saved", "success");
-    } catch {
-      // Rollback
-      setSettings((prev) => ({ ...prev, [key]: !newValue }));
-      showToast("Failed to save", "error");
-    } finally {
-      setSavingKey(null);
-    }
-  }
-
-  if (!settings) return null;
-
-  const ticketRows = [
-    {
-      key: "ticket_assigned",
-      label: "New ticket assigned",
-      desc: "When a ticket is assigned to you",
-    },
-    {
-      key: "ticket_status",
-      label: "Ticket status update",
-      desc: "When a ticket's status changes",
-    },
-    {
-      key: "sla_warning",
-      label: "SLA breach warning",
-      desc: "Alert 1 hour before SLA deadline",
-    },
-    {
-      key: "new_comment",
-      label: "New comment on ticket",
-      desc: "When someone replies to your ticket",
-    },
-  ];
-
-  const systemRows = [
-    {
-      key: "server_downtime",
-      label: "Server downtime alert",
-      desc: "Immediate alert on infrastructure failure",
-    },
-    {
-      key: "security_incidents",
-      label: "Security incidents",
-      desc: "Unauthorized access or policy violations",
-    },
-    {
-      key: "weekly_summary",
-      label: "Weekly summary email",
-      desc: "Sent every Sunday at 8:00 AM",
-    },
-  ];
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <Toast toast={toast} />
-
-      <Card>
-        <CardHeader
-          title="Ticket alerts"
-          desc="Get notified about your support tickets."
-        />
-        {ticketRows.map((row) => (
-          <Row key={row.key} label={row.label} desc={row.desc}>
-            <Toggle
-              value={settings[row.key]}
-              loading={savingKey === row.key}
-              onChange={(val) => handleToggle(row.key, val)}
-            />
-          </Row>
-        ))}
-      </Card>
-
-      <Card>
-        <CardHeader
-          title="System alerts"
-          desc="Critical and operational system notifications."
-        />
-        {systemRows.map((row) => (
-          <Row key={row.key} label={row.label} desc={row.desc}>
-            <Toggle
-              value={settings[row.key]}
-              loading={savingKey === row.key}
-              onChange={(val) => handleToggle(row.key, val)}
-            />
-          </Row>
-        ))}
-      </Card>
-    </div>
-  );
-}
-
 function PagePermissions() {
   const perms = [
     {
@@ -890,24 +717,62 @@ function PagePermissions() {
   );
 }
 
-function PageAppearance() {
+function PageAppearance({ isDarkMode, setIsDarkMode }) {
   const sel = { ...inp, width: "auto" };
+  const savedValue = isDarkMode ? "dark" : "light";
+  const [draft, setDraft] = useState(savedValue);
+  const [lastSavedValue, setLastSavedValue] = useState(savedValue);
+  const [toast, setToast] = useState(null);
+
+  // Keep the draft in sync if the theme changes elsewhere (e.g. the header
+  // toggle). (Adjusted during render on prop change rather than in a
+  // useEffect, to avoid a cascading-render lint warning for a plain
+  // prop-sync case.)
+  if (savedValue !== lastSavedValue) {
+    setLastSavedValue(savedValue);
+    setDraft(savedValue);
+  }
+
+  function showToast(msg, type) {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  const isDirty = draft !== savedValue;
+
+  function handleSave() {
+    setIsDarkMode?.(draft === "dark");
+    showToast("✓ Theme updated", "success");
+  }
+
+  function handleDiscard() {
+    setDraft(savedValue);
+  }
+
   return (
     <Card>
+      <Toast toast={toast} />
       <CardHeader
         title="Display preferences"
         desc="Customize how the platform looks for you."
       />
       <Row label="Color theme" desc="Choose your preferred color mode">
-        <select style={{ ...sel, width: 160 }}>
-          <option>System default</option>
-          <option>Light</option>
-          <option>Dark</option>
+        <select
+          style={{ ...sel, width: 160 }}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+        >
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
         </select>
       </Row>
       <CardFooter>
-        <BtnSecondary>Discard</BtnSecondary>
-        <BtnPrimary>Save changes</BtnPrimary>
+        <BtnSecondary onClick={handleDiscard} disabled={!isDirty}>
+          Discard
+        </BtnSecondary>
+        <BtnPrimary onClick={handleSave} disabled={!isDirty}>
+          Save changes
+        </BtnPrimary>
       </CardFooter>
     </Card>
   );
@@ -1103,13 +968,12 @@ function PageDanger() {
 const TABS = [
   { id: "profile", label: "Profile" },
   { id: "account", label: "Account & security" },
-  { id: "notifications", label: "Notifications" },
   { id: "permissions", label: "Permissions" },
   { id: "appearance", label: "Appearance" },
   { id: "danger", label: "Account Actions" },
 ];
 
-export default function Settings({ refreshUser, isDarkMode }) {
+export default function Settings({ refreshUser, isDarkMode, setIsDarkMode }) {
   // Sync module-level C before any sub-component renders
   C = isDarkMode ? DARK_C : LIGHT_C;
   const [active, setActive] = useState("profile");
@@ -1117,9 +981,10 @@ export default function Settings({ refreshUser, isDarkMode }) {
   const PAGES = {
     profile: <PageProfile refreshUser={refreshUser} />,
     account: <PageAccount />,
-    notifications: <PageNotifications />,
     permissions: <PagePermissions />,
-    appearance: <PageAppearance />,
+    appearance: (
+      <PageAppearance isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+    ),
     danger: <PageDanger />,
   };
 

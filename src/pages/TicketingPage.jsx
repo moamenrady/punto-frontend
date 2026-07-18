@@ -28,7 +28,7 @@ export default function TicketingPage({
   isLoading,
   theme,
 }) {
-  const isDark = theme?.bg?.includes('12102A') || theme?.bg?.includes('dark') || document.documentElement.classList.contains('dark');
+  const isDark = theme?.bg?.includes('12102A') ?? false;
   const [, setTick] = useState(0);
   const [showClosed, setShowClosed] = useState(false);
   const [showAssignedToMe, setShowAssignedToMe] = useState(false);

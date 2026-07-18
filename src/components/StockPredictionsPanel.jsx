@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { SystemAdmin } from '../services/aiOpsService';
+import HelpSolveModal from './HelpSolveModal';
 
 // ── Status presentation map ──────────────────────────────────────────────
 const STATUS_META = {
@@ -70,6 +71,7 @@ const StockPredictionsPanel = ({ onLoaded }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [helpItem, setHelpItem] = useState(null); // { item_id, item_name } | null
 
   const fetchPredictions = useCallback(async () => {
     setIsLoading(true);
@@ -226,12 +228,30 @@ const StockPredictionsPanel = ({ onLoaded }) => {
                       🚨 Out of stock — reorder immediately.
                     </div>
                   )}
+
+                  {(item.status === 'critical' || item.status === 'empty') && (
+                    <button
+                      onClick={() => setHelpItem(item)}
+                      className="ds-btn ds-btn-secondary"
+                      style={{ marginTop: 12, width: '100%', justifyContent: 'center', color: '#534AB7', borderColor: '#C7D2F8', background: '#EEF1FD' }}
+                    >
+                      🧠 Help me solve
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      <HelpSolveModal
+        isOpen={Boolean(helpItem)}
+        onClose={() => setHelpItem(null)}
+        itemId={helpItem?.item_id}
+        itemType="stock"
+        itemLabel={helpItem?.item_name}
+      />
 
       <style>{`
         @keyframes spPanelSpin { to { transform: rotate(360deg); } }

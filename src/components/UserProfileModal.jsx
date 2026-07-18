@@ -27,7 +27,7 @@ const ACCENT_BG = "#F5F4FF";
 
 // Derive dark-mode variants at call time
 const getThemeTokens = (theme) => {
-  const d = theme?.bg?.includes('12102A') || document.documentElement.classList.contains('dark');
+  const d = theme?.bg?.includes('12102A') ?? false;
   return {
     isDark: d,
     panelBg:  d ? '#111827' : '#ffffff',

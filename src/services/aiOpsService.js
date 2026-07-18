@@ -51,14 +51,14 @@ function handleError(error, fallbackMessage) {
 
   if (error.request) {
     throw new Error(
-      "No response from the AI service. It may be waking up (Railway cold start) — please try again in a moment."
+      "No response from the AI service. It may be waking up (Railway cold start) - please try again in a moment."
     );
   }
 
   throw new Error(error.message || fallbackMessage);
 }
 
-// ── System Admin ──────────────────────────────────────────────────────────
+// -- System Admin ------------------------------------------------------------
 // Health checks, vector DB maintenance, and stock-check automation.
 export const SystemAdmin = {
   checkHealth: async () => {
@@ -89,13 +89,13 @@ export const SystemAdmin = {
   },
 
   /**
-   * GET /api/ai/stock-predictions — no request body.
+   * GET /api/ai/stock-predictions - no request body.
    * Resolves to { success, message, data: StockPrediction[] } where each
    * item looks like:
    *   { item_id, item_name, current_qty, status: 'safe'|'critical'|'empty'|'insufficient_data',
    *     daily_burn_rate, days_left, empty_date }
    * Note: when the AI marks an item "critical" it automatically opens an
-   * IT ticket server-side — the front end only needs to display the result.
+   * IT ticket server-side - the front end only needs to display the result.
    */
   getStockPredictions: async () => {
     try {
@@ -107,7 +107,20 @@ export const SystemAdmin = {
   },
 
   /**
-   * POST /api/ai/extract-stock-usage — called right after a task is marked
+   * GET /api/ai/debug-stocks - raw diagnostic dump of the stock-tracking
+   * state (useful for admins troubleshooting why a prediction looks off).
+   */
+  debugStocks: async () => {
+    try {
+      const { data } = await aiClient.get("/api/ai/debug-stocks");
+      return data;
+    } catch (err) {
+      handleError(err, "Failed to load stock debug data");
+    }
+  },
+
+  /**
+   * POST /api/ai/extract-stock-usage - called right after a task is marked
    * complete. Analyzes the employee's task/comment history and returns any
    * tools/items it thinks were withdrawn from stock.
    * @param {Object} params
@@ -128,7 +141,7 @@ export const SystemAdmin = {
   },
 };
 
-// ── AI Features ────────────────────────────────────────────────────────────
+// -- AI Features --------------------------------------------------------------
 // Conversational assistant + AI-driven task assignment.
 export const AiFeatures = {
   /**
@@ -172,11 +185,11 @@ export const AiFeatures = {
   },
 
   /**
-   * POST /api/ai/help-solve — "Help me solve" button on a task/ticket.
-   * Returns a Markdown-formatted solution write-up.
+   * POST /api/ai/help-solve - "Help me solve" button on a task, ticket, or
+   * low/out-of-stock item. Returns a Markdown-formatted solution write-up.
    * @param {Object} params
-   * @param {string} params.itemId - task or ticket id
-   * @param {'task'|'ticket'} params.itemType
+   * @param {string} params.itemId - task, ticket, or stock item id
+   * @param {'task'|'ticket'|'stock'} params.itemType
    * @param {string} [params.details] - optional extra notes from the employee
    */
   helpSolve: async ({ itemId, itemType, details }) => {
@@ -193,7 +206,7 @@ export const AiFeatures = {
   },
 
   /**
-   * POST /api/ai/breakdown-task — "AI Breakdown" on the project manager page.
+   * POST /api/ai/breakdown-task - "AI Breakdown" on the project manager page.
    * Turns a big idea into an array of { name, description, priority } tasks.
    * @param {Object} params
    * @param {string} params.description - the manager's big idea, verbatim
@@ -208,7 +221,7 @@ export const AiFeatures = {
   },
 
   /**
-   * POST /api/ai/auto-assign — "Auto-Assign Tickets" on the manager tickets page.
+   * POST /api/ai/auto-assign - "Auto-Assign Tickets" on the manager tickets page.
    * Assigns every still-"Unassigned" ticket to the most available/qualified employee.
    * @param {Object} params
    * @param {string} params.companyId
@@ -221,13 +234,46 @@ export const AiFeatures = {
       handleError(err, "Failed to auto-assign tickets");
     }
   },
+
+  /**
+   * POST /api/ai/assign-ticket - AI picks the best team/agent for a single ticket.
+   * @param {Object} params
+   * @param {string} params.ticketId
+   */
+  assignTicket: async ({ ticketId }) => {
+    try {
+      const { data } = await aiClient.post("/api/ai/assign-ticket", { ticket_id: ticketId });
+      return data;
+    } catch (err) {
+      handleError(err, "Failed to assign the ticket");
+    }
+  },
+
+  /**
+   * POST /api/ai/assign-bulk-tasks - bulk version of assignTask for assigning
+   * many tasks to teams/employees in one AI pass.
+   * @param {Object} params
+   * @param {Array<string>} params.taskIds
+   * @param {string} [params.teamId]
+   */
+  assignBulkTasks: async ({ taskIds, teamId }) => {
+    try {
+      const { data } = await aiClient.post("/api/ai/assign-bulk-tasks", {
+        task_ids: taskIds,
+        team_id: teamId,
+      });
+      return data;
+    } catch (err) {
+      handleError(err, "Failed to assign the selected tasks");
+    }
+  },
 };
 
-// ── Task Management ─────────────────────────────────────────────────────────
+// -- Task Management ------------------------------------------------------------
 // Persists AI-generated task breakdowns once a manager has assigned owners.
 export const TaskManagement = {
   /**
-   * POST /api/ai/bulk-create-tasks — "Assign & Save" below the AI Breakdown table.
+   * POST /api/ai/bulk-create-tasks - "Assign & Save" below the AI Breakdown table.
    * @param {Object} params
    * @param {string} params.companyId
    * @param {string} params.createdBy - manager's user id
@@ -253,7 +299,7 @@ export const TaskManagement = {
   },
 };
 
-// ── Ticket Management ───────────────────────────────────────────────────────
+// -- Ticket Management ---------------------------------------------------------
 // Ticket creation + work completion (both drive the same RAG/knowledge base).
 export const TicketManagement = {
   /**
@@ -262,14 +308,16 @@ export const TicketManagement = {
    * @param {string} params.description
    * @param {string} params.priority
    * @param {string} params.createdById
+   * @param {string} params.companyId
    */
-  createTicket: async ({ title, description, priority, createdById }) => {
+  createTicket: async ({ title, description, priority, createdById, companyId }) => {
     try {
       const { data } = await aiClient.post("/api/tickets/create", {
         title,
         description,
         priority,
         created_by_id: createdById,
+        company_id: companyId, // ✅ مضاف — required by TicketCreateRequest on the backend
       });
       return data;
     } catch (err) {

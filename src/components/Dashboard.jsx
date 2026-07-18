@@ -7,6 +7,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import CreateProjectModal  from './CreateProjectModal';
 import AIBreakdownModal    from './AIBreakdownModal';
+import AIAutoAssignModal   from './AIAutoAssignModal';
 import EditSprintModal     from './EditSprintModal';
 import DeleteSprintModal   from './DeleteSprintModal';
 import ViewTaskModal       from './ViewTaskModal';
@@ -2633,6 +2634,9 @@ const Dashboard = ({ user }) => {
           <button className="ds-btn ds-btn-secondary" onClick={() => setModal({ type: 'aiBreakdown' })}>
             ✨ AI Breakdown
           </button>
+          <button className="ds-btn ds-btn-secondary" onClick={() => setModal({ type: 'aiAutoAssign' })}>
+            🎯 AI Auto-Assign
+          </button>
           <button
             className="ds-btn ds-btn-primary"
             onClick={() => setModal({ type: "createBacklog" })}
@@ -2750,6 +2754,34 @@ const Dashboard = ({ user }) => {
                       onClick={() => setModal({ type: "createTask", data: { backlogId: bl._id } })}
                     >
                       + Task
+                    </button>
+                  )}
+                  {isAdmin && (tasksByBacklog[bl._id] ?? []).length > 0 && (
+                    <button
+                      style={{ ...iconBtn, color: "#7C3AED" }}
+                      title="AI Auto-Assign this backlog"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#F5F3FF";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "";
+                      }}
+                      onClick={() => setModal({ type: "aiAutoAssign", data: { backlogId: bl._id } })}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <circle cx="12" cy="12" r="5" />
+                        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+                      </svg>
                     </button>
                   )}
                   {isAdmin && (
@@ -4673,6 +4705,22 @@ const PROJECT_TABS = [
         companyId={user?.company_id}
         createdBy={user?._id}
         onCreated={() => { refreshProjectData(); toastSuccess('Tasks Created', 'The AI-assigned tasks were saved to the backlog.'); }}
+      />
+      <AIAutoAssignModal
+        isOpen={modal?.type === 'aiAutoAssign'}
+        onClose={closeModal}
+        backlogs={backlogs}
+        tasksByBacklog={tasksByBacklog}
+        teams={teams}
+        defaultBacklogId={modal?.data?.backlogId ?? ""}
+        onAssigned={(data, backlog, team) => {
+          refreshProjectData();
+          toastSuccess(
+            'Auto-Assigned',
+            data?.message || `Tasks in "${backlog?.name}" were assigned to ${team?.name}.`
+          );
+          closeModal();
+        }}
       />
       <CreateTaskModal
         isOpen={modal?.type === "createTask"}
